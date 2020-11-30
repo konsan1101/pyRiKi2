@@ -123,6 +123,87 @@ runMode = 'debug'
 
 
 
+def clear_tts(proc_id, ):
+
+    # TTSフォルダクリア
+    path = qPath_s_TTS
+    path_files = glob.glob(path + '*.' + proc_id + '.*')
+    path_files.sort()
+    if (len(path_files) > 0):
+        for f in path_files:
+            proc_file = f.replace('\\', '/')
+            print(proc_file)
+            qFunc.remove(proc_file)
+
+    # Playフォルダクリア
+    path = qPath_s_play
+    path_files = glob.glob(path + '*.' + proc_id + '.*')
+    path_files.sort()
+    if (len(path_files) > 0):
+        for f in path_files:
+            proc_file = f.replace('\\', '/')
+            print(proc_file)
+            qFunc.remove(proc_file)
+
+def html_narou_to_tts(abortQ=None, proc_id=None, html=None, ):
+
+    # 中断指示Q
+    if (not abortQ is None):
+        if (abortQ.qsize() > 0):
+            q_get  = abortQ.get()
+            abortQ.task_done()
+
+    # 無効 html ？
+    if (html == None):
+        return False
+
+    # TTS 出力
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
+        title = soup.find('p', class_='chapter_title')
+        print(title.text)
+        speechs = []
+        speechs.append({ 'text':u'タイトル', 'wait':0, })
+        qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
+        time.sleep(1.5)
+        speechs = []
+        speechs.append({ 'text':title.text, 'wait':0, })
+        qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
+        time.sleep(1.5)
+    except:
+        pass
+
+    for i in range(1, 9999):
+
+        # 中断！
+        if (not abortQ is None):
+            if (abortQ.qsize() > 0):
+                q_get  = abortQ.get()
+                abortQ.task_done()
+                break
+
+        try:
+            p_list = soup.find_all('p', id='L' + str(i))
+            if (len(p_list) == 0):
+                break
+            if (i == 1):
+                speechs = []
+                speechs.append({ 'text':u'本文', 'wait':0, })
+                qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
+                time.sleep(1.5)
+            for p in p_list:
+                print(p.text)
+                speechs = []
+                speechs.append({ 'text':p.text, 'wait':0, })
+                qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
+                time.sleep(1.5)
+        except:
+            pass
+
+    return True
+
+
+
 class main_browser:
 
     def __init__(self, name='thread', id='0', runMode='debug', ):
@@ -153,6 +234,9 @@ class main_browser:
         self.browser_url   = ''
         self.browser_html  = None
         self.last_url      = None
+
+        self.batch_thread  = None
+        self.batch_abortQ  = queue.Queue()
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -461,42 +545,22 @@ class main_browser:
         print(self.browser_url)
         #self.browser_id.save_screenshot(file_name)
 
+        # 音声読み上げキャンセル
+        if (not self.batch_thread is None):
+            self.batch_abortQ.put('_abort_')
+            time.sleep(2.00)
+            self.batch_thread = None
+        clear_tts(self.proc_id, )
+
         #なろう
         if (self.browser_url[:26] == 'https://ncode.syosetu.com/'):
 
-            try:
-                soup = BeautifulSoup(self.browser_html, 'html.parser')
-                title = soup.find('p', class_='chapter_title')
-                print(title.text)
-                speechs = []
-                speechs.append({ 'text':u'タイトル', 'wait':0, })
-                qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
-                time.sleep(1.5)
-                speechs = []
-                speechs.append({ 'text':title.text, 'wait':0, })
-                qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
-                time.sleep(1.5)
-            except:
-                pass
-
-            for i in range(1, 9999):
-                try:
-                    p_list = soup.find_all('p', id='L' + str(i))
-                    if (len(p_list) == 0):
-                        break
-                    if (i == 1):
-                        speechs = []
-                        speechs.append({ 'text':u'本文', 'wait':0, })
-                        qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
-                        time.sleep(1.5)
-                    for p in p_list:
-                        print(p.text)
-                        speechs = []
-                        speechs.append({ 'text':p.text, 'wait':0, })
-                        qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
-                        time.sleep(1.5)
-                except:
-                    pass
+            # threading
+            self.batch_thread = threading.Thread(target=html_narou_to_tts, args=( \
+                    self.batch_abortQ, self.proc_id, self.browser_html, \
+                    ))
+            self.batch_thread.setDaemon(True)
+            self.batch_thread.start()
 
         return True
 
