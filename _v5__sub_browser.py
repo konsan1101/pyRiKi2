@@ -20,10 +20,11 @@ import threading
 import subprocess
 
 from selenium.webdriver import Firefox, FirefoxOptions
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
-import requests as web
-import bs4
-import urllib.parse
+from bs4 import BeautifulSoup
 
 #print(os.path.dirname(__file__))
 #print(os.path.basename(__file__))
@@ -150,6 +151,8 @@ class main_browser:
         self.browser_id    = None 
         self.browser_start = time.time() 
         self.browser_url   = ''
+        self.browser_html  = None
+        self.last_url      = None
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -276,6 +279,9 @@ class main_browser:
             if (control != ''):
                 self.sub_proc(control, )
 
+            # 検査
+            self.sub_check_url()
+
             # アイドリング
             slow = False
             if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
@@ -380,7 +386,7 @@ class main_browser:
             #options.add_argument('-headless')
 
             # FirefoxのWebDriver作成
-            self.browser_id = Firefox(options=options)
+            self.browser_id   = Firefox(options=options)
 
             # ウィンドウサイズとズームを設定
             #driver.set_window_size(1920, 9999)
@@ -394,6 +400,9 @@ class main_browser:
         elif (proc_text[:4] == 'http'):
             url = proc_text
             #self.browser_id.get(url)
+        elif (proc_text == u'本好き'):
+            url = 'https://ncode.syosetu.com/n4830bu/'
+            #self.browser_id.get(url)
 
         if (url == ''):
             url = 'https://www.google.com/search?q=' + proc_text
@@ -404,9 +413,6 @@ class main_browser:
             self.browser_id.get(url)
         except Exception as e:
             self.sub_stop('_stop_', )
-
-        # 画像保管
-        #self.browser_id.save_screenshot(file_name)
 
 
 
@@ -426,6 +432,73 @@ class main_browser:
         qFunc.statusSet(self.fileBsy, False)
         if (str(self.id) == '0'):
             qFunc.statusSet(qBusy_d_browser, False)
+
+
+
+    # 検査
+    def sub_check_url(self, ):
+
+        # 表示中？
+        if (self.browser_id is None):
+            self.browser_url  = None
+            self.browser_html = None
+            self.last_url     = None
+            return False
+
+        # 変化？
+        self.browser_url = self.browser_id.current_url
+        if (self.browser_url == self.last_url):
+            return False
+
+        #visibility_of_all_elements_located
+        #ページの全要素がDOM上に現れ, かつheight・widthが0以上になるまで待機
+        self.browser_wait = WebDriverWait(self.browser_id, 10)
+        element = self.browser_wait.until(EC.visibility_of_all_elements_located)
+
+        # 画像保管
+        self.browser_html = self.browser_id.page_source
+        self.last_url     = self.browser_url
+        print(self.browser_url)
+        #self.browser_id.save_screenshot(file_name)
+
+        #なろう
+        if (self.browser_url[:26] == 'https://ncode.syosetu.com/'):
+
+            try:
+                soup = BeautifulSoup(self.browser_html, 'html.parser')
+                title = soup.find('p', class_='chapter_title')
+                print(title.text)
+                speechs = []
+                speechs.append({ 'text':u'タイトル', 'wait':0, })
+                qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
+                time.sleep(1.5)
+                speechs = []
+                speechs.append({ 'text':title.text, 'wait':0, })
+                qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
+                time.sleep(1.5)
+            except:
+                pass
+
+            for i in range(1, 9999):
+                try:
+                    p_list = soup.find_all('p', id='L' + str(i))
+                    if (len(p_list) == 0):
+                        break
+                    if (i == 1):
+                        speechs = []
+                        speechs.append({ 'text':u'本文', 'wait':0, })
+                        qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
+                        time.sleep(1.5)
+                    for p in p_list:
+                        print(p.text)
+                        speechs = []
+                        speechs.append({ 'text':p.text, 'wait':0, })
+                        qRiKi.speech(id=self.proc_id, speechs=speechs, idolSec=0, )
+                        time.sleep(1.5)
+                except:
+                    pass
+
+        return True
 
 
 
@@ -508,9 +581,11 @@ if __name__ == '__main__':
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['http://yahoo.co.jp'], encoding='utf-8', exclusive=True, mode='w', )
                     time.sleep(5.00)
                     qFunc.txtsWrite(qCtrl_control_self ,txts=[u'姫路城'], encoding='utf-8', exclusive=True, mode='w', )
+                    time.sleep(5.00)
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=[u'本好き'], encoding='utf-8', exclusive=True, mode='w', )
 
             # テスト終了
-            if  ((time.time() - main_start) > 30):
+            if  ((time.time() - main_start) > 40):
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
                     time.sleep(5.00)
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )

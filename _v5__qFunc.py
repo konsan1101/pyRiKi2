@@ -60,34 +60,40 @@ class qFunc_class:
         return True
 
     def setNice(self, nice, ):
-        p = psutil.Process()
-        if   (nice == 'high'): # 優先度: 高
-            p.nice(psutil.HIGH_PRIORITY_CLASS)
-        elif (nice == 'above'): # 優先度: 通常以上
-            p.nice(psutil.ABOVE_NORMAL_PRIORITY_CLASS)
-        elif (nice == 'normal'): # 優先度: 通常
-            p.nice(psutil.NORMAL_PRIORITY_CLASS)
-        elif (nice == 'below'): # 優先度: 通常以下
-            p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-        elif (nice == 'idol'): # 優先度: 低
-            p.nice(psutil.IDLE_PRIORITY_CLASS)
-        else: # 優先度: 通常
-            p.nice(psutil.NORMAL_PRIORITY_CLASS)
+        try:
+            p = psutil.Process()
+            if   (nice == 'high'): # 優先度: 高
+                p.nice(psutil.HIGH_PRIORITY_CLASS)
+            elif (nice == 'above'): # 優先度: 通常以上
+                p.nice(psutil.ABOVE_NORMAL_PRIORITY_CLASS)
+            elif (nice == 'normal'): # 優先度: 通常
+                p.nice(psutil.NORMAL_PRIORITY_CLASS)
+            elif (nice == 'below'): # 優先度: 通常以下
+                p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+            elif (nice == 'idol'): # 優先度: 低
+                p.nice(psutil.IDLE_PRIORITY_CLASS)
+            else: # 優先度: 通常
+                p.nice(psutil.NORMAL_PRIORITY_CLASS)
+        except:
+            pass
 
     def getNice(self, ):
-        p = psutil.Process()
-        nice = p.nice()
-        if   (nice == psutil.HIGH_PRIORITY_CLASS): # 優先度: 高
-            return 'high'
-        elif (nice == psutil.ABOVE_NORMAL_PRIORITY_CLASS): # 優先度: 通常以上
-            return 'above'
-        elif (nice == psutil.NORMAL_PRIORITY_CLASS): # 優先度: 通常
-            return 'normal'
-        elif (nice == psutil.BELOW_NORMAL_PRIORITY_CLASS): # 優先度: 通常以下
-            return 'below'
-        elif (nice == psutil.IDLE_PRIORITY_CLASS): # 優先度: 低
-            return 'idol'
-        else: # 優先度: 通常
+        try:
+            p = psutil.Process()
+            nice = p.nice()
+            if   (nice == psutil.HIGH_PRIORITY_CLASS): # 優先度: 高
+                return 'high'
+            elif (nice == psutil.ABOVE_NORMAL_PRIORITY_CLASS): # 優先度: 通常以上
+                return 'above'
+            elif (nice == psutil.NORMAL_PRIORITY_CLASS): # 優先度: 通常
+                return 'normal'
+            elif (nice == psutil.BELOW_NORMAL_PRIORITY_CLASS): # 優先度: 通常以下
+                return 'below'
+            elif (nice == psutil.IDLE_PRIORITY_CLASS): # 優先度: 低
+                return 'idol'
+            else: # 優先度: 通常
+                pass
+        except:
             pass
         return 'normal'
 

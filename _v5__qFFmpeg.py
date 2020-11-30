@@ -155,6 +155,7 @@ class qFFmpeg_class:
             # リトライ
             if (check == False):
                 time.sleep(retry_wait)
+                retry_count += 1
 
         if (check == True):
             return image
@@ -215,7 +216,7 @@ class qFFmpeg_class:
 
                     ffmpeg = subprocess.Popen(['ffmpeg', 
                         '-threads', '2',
-                        '-f', 'avfoundation', '-i', '1:2',
+                        '-f', 'avfoundation', '-i', '1:0',
                         '-ss','0','-t','0.2','-r','10',
                         '-q','1', 
                         work_path + '.' + '%04d.jpg',
@@ -257,7 +258,7 @@ class qFFmpeg_class:
 
         return capture
 
-    def rec_start(self, dev='desktop', rate=10, 
+    def rec_start(self, dev='desktop', rate='10', 
                     out_filev='temp/_work/recorder.mp4', out_filea='temp/_work/recorder.wav',
                     retry_max=3, retry_wait=5.00, ):
 
@@ -282,7 +283,7 @@ class qFFmpeg_class:
         else:
             return None, None, '', ''
 
-    def rec_start_sub(self, dev='desktop', rate=10,
+    def rec_start_sub(self, dev='desktop', rate='10',
                         out_filev='temp/_work/recorder.mp4', out_filea='temp/_work/recorder.wav',
                         try_count=0, ):
         res_ffmpeg = None
@@ -307,7 +308,7 @@ class qFFmpeg_class:
                         res_ffmpeg = subprocess.Popen(['ffmpeg',
                             '-threads', '2',
                             '-f', 'avfoundation',
-                            '-i', '1:2',
+                            '-i', '1:0',
                             '-vf', 'scale=1920:-2',
                             '-vcodec', 'flv1',
                             '-q:v', '0',
@@ -535,7 +536,7 @@ class qFFmpeg_class:
 
         return True
 
-    def encodemp4mp3(self, inp_filev='temp/_work/recorder.mp4', inp_filea='temp/_work/recorder.wav', rate=10,
+    def encodemp4mp3(self, inp_filev='temp/_work/recorder.mp4', inp_filea='temp/_work/recorder.wav', rate='10',
                     out_filev='temp/_work/recorder_h265.mp4', out_filea='temp/_work/recorder_mp3.mp3', ):
 
         mp4ok = False
