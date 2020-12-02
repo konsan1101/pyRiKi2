@@ -19,6 +19,9 @@ import pyautogui
 import numpy as np
 import cv2
 
+import platform
+qPLATFORM = platform.system().lower() #windows,darwin,linux
+
 
 
 class qFFmpeg_class:
@@ -98,7 +101,7 @@ class qFFmpeg_class:
 
         return output_img, output_face
 
-    def dshow_dev_list(self, ):
+    def ffmpeg_list_dev(self, ):
         cam = []
         mic = []
 
@@ -136,6 +139,48 @@ class qFFmpeg_class:
                     st = txt.find(']  "') + 4
                     en = txt[st:].find('"')
                     t  = txt[st:st+en]
+                    mic.append(t)
+                    #print('mic:', t)
+
+            ffmpeg.terminate()
+            ffmpeg = None
+
+        elif (qPLATFORM == 'darwin'):
+
+            ffmpeg = subprocess.Popen(['ffmpeg',
+	            '-threads', '2',
+	            '-f', 'avfoundation',
+	            '-list_devices', 'true',
+	            '-i', 'nul',
+	            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+            flag = ''
+            checkTime = time.time()
+            while ((time.time() - checkTime) < 2):
+                # バッファから1行読み込む.
+                line = ffmpeg.stderr.readline()
+                # バッファが空 + プロセス終了.
+                if (not line) and (not ffmpeg.poll() is None):
+                    break
+                # テキスト
+                txt = line.decode('utf-8')
+                if   (txt.find('AVFoundation video devices') >=0):
+                    flag = 'cam'
+                elif (txt.find('AVFoundation audio devices') >=0):
+                    flag = 'mic'
+                elif (flag == 'cam') and (txt.find('] [') >=0):
+                    st = txt.find('] [') + 3
+                    en = txt[st:].find('] ') + 2
+                    t  = txt[st+en:]
+                    t  = t.replace('\n', '')
+                    if (t != 'Capture screen 0'):
+                        cam.append(t)
+                        #print('cam:', t)
+                elif (flag == 'mic') and (txt.find('] [') >=0):
+                    st = txt.find('] [') + 3
+                    en = txt[st:].find('] ') + 2
+                    t  = txt[st+en:]
+                    t  = t.replace('\n', '')
                     mic.append(t)
                     #print('mic:', t)
 
@@ -759,7 +804,9 @@ if __name__ == '__main__':
     qFFmpeg = qFFmpeg_class()
 
     # デバイス名取得
-    cam, mic = qFFmpeg.dshow_dev_list()
+    cam, mic = qFFmpeg.ffmpeg_list_dev()
+    print(cam)
+    print(mic)
 
     print('snapshot test')
 
