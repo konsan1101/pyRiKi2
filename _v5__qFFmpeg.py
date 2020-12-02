@@ -128,13 +128,16 @@ class qFFmpeg_class:
                 elif (flag == 'cam') and (txt.find(']  "') >=0):
                     st = txt.find(']  "') + 4
                     en = txt[st:].find('"')
-                    cam.append(txt[st:st+en])
-                    #print('cam:', txt[st:st+en])
+                    t  = txt[st:st+en]
+                    if (t != 'OBS Virtual Camera'):
+                        cam.append(t)
+                        #print('cam:', t)
                 elif (flag == 'mic') and (txt.find(']  "') >=0):
                     st = txt.find(']  "') + 4
                     en = txt[st:].find('"')
-                    mic.append(txt[st:st+en])
-                    #print('mic:', txt[st:st+en])
+                    t  = txt[st:st+en]
+                    mic.append(t)
+                    #print('mic:', t)
 
             ffmpeg.terminate()
             ffmpeg = None
