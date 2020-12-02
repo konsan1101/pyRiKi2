@@ -145,9 +145,9 @@ def clear_tts(proc_id, ):
             print(proc_file)
             qFunc.remove(proc_file)
 
-def html_narou_to_tts(abortQ=None, proc_id=None, html=None, ):
+def html_narou_to_tts(abortQ=None, proc_id=None, base_url='', page_url='', html=None, autoPaging='yes', ):
 
-    # 中断指示Q
+    # 中断指示Q クリア
     if (not abortQ is None):
         if (abortQ.qsize() > 0):
             q_get  = abortQ.get()
@@ -157,48 +157,93 @@ def html_narou_to_tts(abortQ=None, proc_id=None, html=None, ):
     if (html == None):
         return False
 
-    # TTS 出力
+    # ページ情報
+    page_sep = page_url.split('/')
+    page_id  = ''
+    page_seq = ''
+    if (len(page_sep) >= 1):
+        page_id  = page_sep[0]
+    if (len(page_sep) >= 2):
+        page_seq = page_sep[1]
+    print(page_seq)
+
+    # 無効 ページ ？
+    if (page_seq == ''):
+        return False
+    if (not page_seq.isnumeric()):
+        return False
+
+    # TTS 出力（タイトル）
     try:
         soup = BeautifulSoup(html, 'html.parser')
-        title = soup.find('p', class_='chapter_title')
-        print(title.text)
-        speechs = []
-        speechs.append({ 'text':u'タイトル', 'wait':0, })
-        qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
-        time.sleep(1.5)
-        speechs = []
-        speechs.append({ 'text':title.text, 'wait':0, })
-        qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
-        time.sleep(1.5)
+        capter_title = ''
+        try:
+            capter_title = soup.find('p', class_='chapter_title')
+        except:
+            capter_title = soup.find('p', class_='margin_r20')
+        print(capter_title.text)
+        sub_title = soup.find('p', class_='novel_subtitle')
+        print(sub_title.text)
+        txt = 'ja,' + u'タイトル'
+        qRiKi.tts(id=proc_id, text=txt, idolSec=0, maxWait=0, )
+        time.sleep(1.2)
+        txt = 'ja,' + capter_title.text + ' ' + sub_title.text
+        qRiKi.tts(id=proc_id, text=txt, idolSec=0, maxWait=0, )
+        time.sleep(1.2)
     except:
         pass
 
+    # TTS 出力（本文）
     for i in range(1, 9999):
 
-        # 中断！
+        # 中断処理
         if (not abortQ is None):
             if (abortQ.qsize() > 0):
                 q_get  = abortQ.get()
                 abortQ.task_done()
-                break
+                return False
 
         try:
             p_list = soup.find_all('p', id='L' + str(i))
             if (len(p_list) == 0):
                 break
             if (i == 1):
-                speechs = []
-                speechs.append({ 'text':u'本文', 'wait':0, })
-                qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
-                time.sleep(1.5)
+                txt = 'ja,' + u'本文'
+                qRiKi.tts(id=proc_id, text=txt, idolSec=0, maxWait=0, )
+                time.sleep(1.2)
             for p in p_list:
-                print(p.text)
-                speechs = []
-                speechs.append({ 'text':p.text, 'wait':0, })
-                qRiKi.speech(id=proc_id, speechs=speechs, idolSec=0, )
-                time.sleep(1.5)
+                txt = p.text
+                print(txt)
+                txt = txt.replace(u'「', '')
+                txt = txt.replace(u'」', '')
+                txt = txt.replace(u'…', ' ')
+                txt = 'ja,' + txt
+                qRiKi.tts(id=proc_id, text=txt, idolSec=0, maxWait=0, )
+                time.sleep(1.2)
         except:
             pass
+
+    # 自動ページング
+    if (autoPaging != 'yes'):
+        return True
+    
+    # 音声待機
+    check = 5
+    while (check > 0):
+        if (qRiKi.statusWait_speech() == False): # busy
+            check -= 1
+        else:
+            check = 5
+        # 中断処理
+        if (not abortQ is None):
+            if (abortQ.qsize() > 0):
+                q_get  = abortQ.get()
+                abortQ.task_done()
+                return True
+
+    # ジャンプ
+    next_page = base_url + page_id + '/' + str(int(page_seq) + 1) + '/'
+    qFunc.txtsWrite(filename=qCtrl_control_self, txts=[next_page], exclusive=True, )
 
     return True
 
@@ -553,11 +598,14 @@ class main_browser:
         clear_tts(self.proc_id, )
 
         #なろう
-        if (self.browser_url[:26] == 'https://ncode.syosetu.com/'):
+        base_url = 'https://ncode.syosetu.com/'
+        if (self.browser_url[:len(base_url)] == base_url):
 
+            page_url = self.browser_url[len(base_url):]
             # threading
-            self.batch_thread = threading.Thread(target=html_narou_to_tts, args=( \
-                    self.batch_abortQ, self.proc_id, self.browser_html, \
+            self.batch_thread = threading.Thread(target=html_narou_to_tts, args=(
+                    self.batch_abortQ, self.proc_id, 
+                    base_url, page_url, self.browser_html, 'yes', 
                     ))
             self.batch_thread.setDaemon(True)
             self.batch_thread.start()

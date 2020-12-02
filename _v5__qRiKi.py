@@ -384,6 +384,7 @@ class qRiKi_class:
                     busy_flag = True
                     time.sleep(0.10)
                     break
+        return busy_flag
 
     def statusReset_speech(self, Flag=False):
         self.statusSet(qBusy_dev_cpu,   Flag)
