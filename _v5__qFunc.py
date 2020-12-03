@@ -429,18 +429,36 @@ class qFunc_class:
             pass
         return False
 
-    def sendKey(self, txt='', cr=True, lf=False ):
+
+
+    def waitSec(self, sec=0, ):
+        xSec = sec
+        while (int(xSec) > 0):
+            print('wait … ' + str(int(xSec)))
+            time.sleep(1)
+            xSec -= 1
+        if (xSec > 0):
+            time.sleep(xSec)
+        return True
+
+    def sendKey(self, txt='', cr=True, lf=False, afterSec=0.5, ):
         out_txt = txt
         if (cr==True) or (lf==True):
             out_txt = out_txt.replace('\r', '')
             out_txt = out_txt.replace('\n', '')
-
         pyperclip.copy(out_txt)
         pyautogui.hotkey('ctrl', 'v')
-
         if (cr==True) or (lf==True):
             pyautogui.typewrite(['enter',])
+        if (afterSec != 0):
+            time.sleep(afterSec)
+        return True
 
+    def keyPress(self, keys=[], afterSec=0.5, ):
+        for key in keys:
+            pyautogui.press(key)
+            if (afterSec != 0):
+                time.sleep(afterSec)
         return True
 
     def notePad(self, txt='', cr=True, lf=False, ):
@@ -688,3 +706,27 @@ if (__name__ == '__main__'):
 
 
 
+# ---------------
+# pyautogui press
+# ---------------
+# Enterキー  ‘enter’,’retuen’,’\n’
+# Escキー    ‘esc’
+# Shiftキー  ‘shiftleft’,’shiftright’
+# Altキー    ‘altleft’,’altright’
+# Ctrlキー   ‘ctrlleft’,’ctrlright’
+# Tabキー    ‘tab’,’\t’
+# Backspaceキー・Deleteキー  ‘backspace’,’delete’
+# PageUpキー・PageDownキー   ‘pageup’,’pagedown’
+# Homeキー・Endキー          ‘Home’,’end’
+# 矢印キー(↑↓←→)             ‘up’,’down’,’left’,’right’
+# ファンクションキー          ‘f1′,’f2’,’f3’など
+# 音量コントロールキー        ‘volumeup’,’volumedown’,’volumemute’
+# Pauseキー      ‘pause’
+# CapsLockキー   ‘capslock’
+# NumLockキー    ‘numlock’
+# ScrollLockキー ‘scrolllock’
+# Insキー        ‘insert’
+# PrintScreenキー‘printscreen’
+# Winキー(Windowsのみ)   ‘winleft’,’winright’
+# Commandキー(Macのみ)   ‘command’
+# Optionキー(Macのみ)    ‘option’
