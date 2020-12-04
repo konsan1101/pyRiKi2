@@ -1,4 +1,10 @@
 @ECHO OFF
+REM ------------------------------------------------
+REM COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+REM This software is released under the MIT License.
+REM https://github.com/konsan1101
+REM Thank you for keeping the rules.
+REM ------------------------------------------------
 
 ECHO;
 ECHO 入力ファイル存在確認

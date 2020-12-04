@@ -1,4 +1,11 @@
-2020/01/26
+# ------------------------------------------------
+# COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+# This software is released under the MIT License.
+# https://github.com/konsan1101
+# Thank you for keeping the rules.
+# ------------------------------------------------
+
+2020/12/05
 
 ---------------
 ‹¤’Ê

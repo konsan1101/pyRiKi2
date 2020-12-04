@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# COPYRIGHT (C) 2014-2020 Mitsuo KONDOU.
+# COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
 # This software is released under the MIT License.
 # https://github.com/konsan1101
 # Thank you for keeping the rules.
@@ -440,55 +440,40 @@ class main_bgm:
             txt = proc_text.lower()
             procBgm = ''
 
-            if (txt == 'playlist 00'  ) or (txt == 'playlist 0') \
-            or (txt == 'playlist zero') \
-            or (txt == 'bgm') or (txt == 'garageband'):
-                procBgm =  '_00_'
+            if  (txt.find(u'プレイリスト') >= 0) or (txt.find('playlist') >= 0) or (txt.find('bgm') >= 0):
 
-            if (txt == 'playlist 01' ) or (txt == 'playlist 1') \
-            or (txt == 'playlist etc') or (txt == 'playlists etc'):
-                procBgm =  '_01_'
-
-            if (txt == 'playlist 02') or (txt == 'playlist 2') \
-            or (txt == self.text['02'].lower()):
-                procBgm =  '_02_'
-
-            if (txt == 'playlist 03') or (txt == 'playlist 3') \
-            or (txt == self.text['03'].lower()):
-                procBgm =  '_03_'
-
-            if (txt == 'playlist 04') or (txt == 'playlist 4') \
-            or (txt == self.text['04'].lower()):
-                procBgm =  '_04_'
-
-            if (txt == 'playlist 05') or (txt == 'playlist 5') \
-            or (txt == self.text['05'].lower()):
-                procBgm =  '_05_'
-
-            if (txt == 'playlist 06') or (txt == 'playlist 6') \
-            or (txt == self.text['06'].lower()):
-                procBgm =  '_06_'
-
-            if (txt == 'playlist') or (txt == 'playlist list') \
-            or (txt == 'list of playlists') or (txt == 'bgm list'):
-
-                speechs = []
-                #speechs.append({ 'text':u'プレイリストゼロは、自作ＢＧＭです。', 'wait':0, })
-                #speechs.append({ 'text':u'プレイリスト１は、お気に入り音楽です。', 'wait':0, })
-                #speechs.append({ 'text':u'プレイリスト２は、「BABYMETAL」です。', 'wait':0, })
-                #speechs.append({ 'text':u'プレイリスト３は、「perfume」です。', 'wait':0, })
-                #speechs.append({ 'text':u'プレイリスト４は、「きゃりーぱみゅぱみゅ」です。', 'wait':0, })
-                #speechs.append({ 'text':u'プレイリスト５は、「ONE OK ROCK」です。', 'wait':0, })
-                #speechs.append({ 'text':u'プレイリスト６は、「SEKAI NO OWARI」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリストゼロは、「' + self.text['00'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリスト１は、　「' + self.text['01'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリスト２は、　「' + self.text['02'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリスト３は、　「' + self.text['03'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリスト４は、　「' + self.text['04'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリスト５は、　「' + self.text['05'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリスト６は、　「' + self.text['06'] + u'」です。', 'wait':0, })
-                speechs.append({ 'text':u'プレイリストを再生しますか？', 'wait':0, })
-                qRiKi.speech(id='speech', speechs=speechs, lang='', )
+                if   (txt.find('01') >= 0) or (txt.find('1') >= 0):
+                    procBgm =  '_01_'
+                elif (txt.find('02') >= 0) or (txt.find('2') >= 0):
+                    procBgm =  '_02_'
+                elif (txt.find('03') >= 0) or (txt.find('3') >= 0):
+                    procBgm =  '_03_'
+                elif (txt.find('04') >= 0) or (txt.find('4') >= 0):
+                    procBgm =  '_04_'
+                elif (txt.find('05') >= 0) or (txt.find('5') >= 0):
+                    procBgm =  '_05_'
+                elif (txt.find('06') >= 0) or (txt.find('6') >= 0):
+                    procBgm =  '_06_'
+                elif (txt.find('0') >= 0) or (txt.find(u'ゼロ') >= 0):
+                    procBgm =  '_00_'
+                elif (txt.find(u'リスト') >= 0) or (txt.find('list') >= 0):
+                    speechs = []
+                    #speechs.append({ 'text':u'プレイリストゼロは、自作ＢＧＭです。', 'wait':0, })
+                    #speechs.append({ 'text':u'プレイリスト１は、お気に入り音楽です。', 'wait':0, })
+                    #speechs.append({ 'text':u'プレイリスト２は、「BABYMETAL」です。', 'wait':0, })
+                    #speechs.append({ 'text':u'プレイリスト３は、「perfume」です。', 'wait':0, })
+                    #speechs.append({ 'text':u'プレイリスト４は、「きゃりーぱみゅぱみゅ」です。', 'wait':0, })
+                    #speechs.append({ 'text':u'プレイリスト５は、「ONE OK ROCK」です。', 'wait':0, })
+                    #speechs.append({ 'text':u'プレイリスト６は、「SEKAI NO OWARI」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリストゼロは、「' + self.text['00'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリスト１は、　「' + self.text['01'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリスト２は、　「' + self.text['02'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリスト３は、　「' + self.text['03'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリスト４は、　「' + self.text['04'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリスト５は、　「' + self.text['05'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリスト６は、　「' + self.text['06'] + u'」です。', 'wait':0, })
+                    speechs.append({ 'text':u'プレイリストを再生しますか？', 'wait':0, })
+                    qRiKi.speech(id='speech', speechs=speechs, lang='', )
 
             if (procBgm != ''):
 

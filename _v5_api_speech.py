@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# COPYRIGHT (C) 2014-2020 Mitsuo KONDOU.
+# COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
 # This software is released under the MIT License.
 # https://github.com/konsan1101
 # Thank you for keeping the rules.
@@ -18,6 +18,8 @@ import glob
 import queue
 import threading
 import subprocess
+
+import pykakasi
 
 
 
@@ -494,6 +496,11 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
             api = 'macos'
 
     apirun = True
+    kakasi_api = True
+    if (kakasi_api == True):
+        kakasi_ = pykakasi.kakasi()
+        kakasi_.setMode('J', 'H') # J:漢字 H:ひらがな
+        kakasi_cv = kakasi_.getConverter()
 
     if (apirun == True):
 
@@ -522,7 +529,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
                        watson_key.getkey('tts','url'),
                        watson_key.getkey('tts','key'), )
             if (res == True):
-                resText, resApi = watsonAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = watsonAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileMp3, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = watsonAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, )
                 if (resText != ''):
                     if (tempFileMp3[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileMp3, outFile)
@@ -542,7 +555,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
             procurl = azure_key.getkey('tts', 'procurl', )
             res = azureAPI.authenticate('tts', key, authurl, procurl, )
             if (res == True):
-                resText, resApi = azureAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = azureAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileMp3, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = azureAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, )
                 if (resText != ''):
                     if (tempFileMp3[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileMp3, outFile)
@@ -561,7 +580,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
             secret_key = aws_key.getkey('tts', 'secret_key', )
             res   = awsAPI.authenticate('tts', key_id, secret_key, )
             if (res == True):
-                resText, resApi = awsAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = awsAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileMp3, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = awsAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, )
                 if (resText != ''):
                     if (tempFileMp3[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileMp3, outFile)
@@ -580,7 +605,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
                        nict_key.getkey('tts', 'id' ),
                        nict_key.getkey('tts', 'key'), )
             if (res == True):
-                resText, resApi = nictAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = nictAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileWav, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = nictAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
                 if (resText != ''):
                     if (tempFileWav[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileWav, outFile)
@@ -597,7 +628,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
             winosAPI = winos_api.SpeechAPI()
             res = winosAPI.authenticate()
             if (res == True):
-                resText, resApi = winosAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = winosAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileWav, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = winosAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
                 if (resText != ''):
                     if (tempFileWav[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileWav, outFile)
@@ -614,7 +651,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
             macosAPI = macos_api.SpeechAPI()
             res = macosAPI.authenticate()
             if (res == True):
-                resText, resApi = macosAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = macosAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileWav, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = macosAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
                 if (resText != ''):
                     if (tempFileWav[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileWav, outFile)
@@ -631,7 +674,13 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
             hoyaAPI = hoya_api.SpeechAPI()
             res = hoyaAPI.authenticate(hoya_key.getkey(), )
             if (res == True):
-                resText, resApi = hoyaAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    resText, resApi = hoyaAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileWav, )
+                    if (resText != ''):
+                        resText = outText
+                else:
+                    resText, resApi = hoyaAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileWav, )
                 if (resText != ''):
                     if (tempFileWav[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileWav, outFile)
@@ -645,20 +694,36 @@ def qVoiceOutput(useApi='free', outLang='en', outText='Hallo', outFile='temp/tem
                 api  = 'free'
 
         if (resText == '') and (api == 'free') and (useApi != 'free'):
-            res = qVoiceOutput_fromCache(useApi=api, outLang=outLang, outText=outText, outFile=outFile,)
-            if (res == True):
-                resText = outText
-                resApi  = api
-                apirun  = False
+                if (outLang == 'ja') and (kakasi_api == True):
+                    outText_kana = kakasi_cv.do(outText)
+                    res = qVoiceOutput_fromCache(useApi=api, outLang=outLang, outText=outText_kana, outFile=outFile,)
+                else:
+                    res = qVoiceOutput_fromCache(useApi=api, outLang=outLang, outText=outText, outFile=outFile,)
+                if (res == True):
+                    resText = outText
+                    resApi  = api
+                    apirun  = False
 
         if (resText == '') and (api == 'google' or api == 'free'):
             googleAPI = google_api.SpeechAPI()
             res = googleAPI.authenticate('tts', google_key.getkey('tts'), )
             if (res == True):
                 if (api == 'google'):
-                    resText, resApi = googleAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, api='auto', )
+                    if (outLang == 'ja') and (kakasi_api == True):
+                        outText_kana = kakasi_cv.do(outText)
+                        resText, resApi = googleAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileMp3, api='auto', )
+                        if (resText != ''):
+                            resText = outText
+                    else:
+                        resText, resApi = googleAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, api='auto', )
                 else:
-                    resText, resApi = googleAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, api='free', )
+                    if (outLang == 'ja') and (kakasi_api == True):
+                        outText_kana = kakasi_cv.do(outText)
+                        resText, resApi = googleAPI.vocalize(outText=outText_kana, outLang=outLang, outFile=tempFileMp3, api='free', )
+                        if (resText != ''):
+                            resText = outText
+                    else:
+                        resText, resApi = googleAPI.vocalize(outText=outText, outLang=outLang, outFile=tempFileMp3, api='free', )
                 if (resText != ''):
                     if (tempFileMp3[-4:].lower() == outFile[-4:].lower()):
                         qFunc.copy(tempFileMp3, outFile)

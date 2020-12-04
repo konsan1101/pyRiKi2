@@ -1,5 +1,12 @@
 @ECHO OFF
-rem CALL __setpath.bat
+REM ------------------------------------------------
+REM COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+REM This software is released under the MIT License.
+REM https://github.com/konsan1101
+REM Thank you for keeping the rules.
+REM ------------------------------------------------
+
+REM CALL __setpath.bat
 
 ECHO;
 ECHO ----------
@@ -43,6 +50,7 @@ ECHO -------
     python -m pip  install --upgrade pysimpleguiqt
     python -m pip  install --upgrade psutil
     python -m pip  install --upgrade pycryptodome
+    python -m pip  install --upgrade pykakasi
 rem ↓ use vs code
     python -m pip  install --upgrade pylint
 

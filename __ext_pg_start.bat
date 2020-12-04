@@ -1,4 +1,10 @@
 @ECHO OFF
+REM ------------------------------------------------
+REM COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+REM This software is released under the MIT License.
+REM https://github.com/konsan1101
+REM Thank you for keeping the rules.
+REM ------------------------------------------------
 
 IF EXIST "C:\snkApps\SAAP_r545\RiKiòAågî≈SAAPé¿èÿãLò^óp2013R544_azipê⁄ë±_PGWK.accdb"  GOTO BEGIN
 
