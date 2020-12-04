@@ -111,7 +111,7 @@ class qFunc_class:
     def putJson(self, json_path='_config/', json_file='test_key.json', json_dic={}, ):
         try:
             w = codecs.open(json_path + json_file, 'w', 'utf-8')
-            w.write(json.dumps(json_dic,indent=4,))
+            w.write(json.dumps(json_dic, indent=4, ensure_ascii=False, ))
             w.close()
             return True
         except Exception as e:
