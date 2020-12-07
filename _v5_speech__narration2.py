@@ -1,10 +1,12 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# ------------------------------------------------
 # COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
 # This software is released under the MIT License.
 # https://github.com/konsan1101
 # Thank you for keeping the rules.
+# ------------------------------------------------
 
 
 
