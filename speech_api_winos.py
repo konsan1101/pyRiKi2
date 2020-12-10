@@ -91,9 +91,14 @@ class SpeechAPI:
 
                     # MS Windows
                     stml  = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">'
+                    if (lang == 'ja-JP'):
+                        stml += '<prosody rate="fast">'
                     stml += '<voice xml:lang="' + lang + '" gender="' + outGender.lower() + '">'
                     stml += outText
-                    stml += '</voice></speak>'
+                    stml += '</voice>'
+                    if (lang == 'ja-JP'):
+                        stml += '</prosody>'
+                    stml += '</speak>'
 
                     pythoncom.CoInitialize()
 
