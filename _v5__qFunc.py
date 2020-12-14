@@ -443,7 +443,7 @@ class qFunc_class:
             time.sleep(xSec)
         return True
 
-    def sendKey(self, txt='', cr=True, lf=False, afterSec=0.5, ):
+    def sendKey(self, txt='', cr=True, lf=False, afterSec=0, ):
         out_txt = txt
         if (cr==True) or (lf==True):
             out_txt = out_txt.replace('\r', '')
@@ -456,12 +456,65 @@ class qFunc_class:
             time.sleep(afterSec)
         return True
 
-    def keyPress(self, keys=[], afterSec=0.5, ):
+    def keyPress(self, keys=[], afterSec=0, ):
         for key in keys:
             pyautogui.press(key)
             if (afterSec != 0):
                 time.sleep(afterSec)
         return True
+
+    def checkImageHit(self, filename='', confidence=0.9, waitSec=5, movePointer=True, ):
+        left   = 0
+        top    = 0
+        width  = 0
+        height = 0
+        if (filename==''):
+            return False, left, top, width, height
+        chktime = time.time()
+        res = pyautogui.locateOnScreen(filename, confidence=confidence, )
+        while (res == None) and ((time.time() - chktime) < waitSec):
+            time.sleep(0.10)
+            res = pyautogui.locateOnScreen(filename, confidence=confidence, )
+        if (res is None):
+            return False, left, top, width, height
+        else:
+            left   = res[0]
+            top    = res[1]
+            width  = res[2]
+            height = res[3]
+            if (movePointer == True):
+                pyautogui.moveTo(x=int(left+width/2), y=int(top+height/2), )
+            return True, left, top, width, height
+
+    def checkImageHide(self, filename='', confidence=0.9, waitSec=5, ):
+        if (filename==''):
+            return True
+        chktime = time.time()
+        res = pyautogui.locateOnScreen(filename, confidence=confidence, )
+        while (not res is None) and ((time.time() - chktime) < waitSec):
+            time.sleep(0.10)
+            res = pyautogui.locateOnScreen(filename, confidence=confidence, )
+        if (res is None):
+            return True
+        else:
+            return False
+
+    def movePointer(self, left=0, top=0, offset=False, click=None, ):
+        if (offset == False):
+            X = left
+            Y = top
+            pyautogui.moveTo(x=X, y=Y, )
+            if (not click is None):
+                pyautogui.click(x=X, y=Y, clicks=1, interval=0.5, button=click)
+            return True
+        else:
+            X, Y = pyautogui.position()
+            X = int(X + left)
+            Y = int(Y + top)
+            pyautogui.moveTo(x=X, y=Y, )
+            if (not click is None):
+                pyautogui.click(x=X, y=Y, clicks=1, interval=0.5, button=click)
+            return True
 
     def notePad(self, txt='', cr=True, lf=False, ):
         winTitle  = u'無題 - メモ帳'
