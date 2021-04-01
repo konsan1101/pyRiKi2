@@ -131,13 +131,13 @@ def sgGraphColumn(name, key):
         [sg.Graph((GRAPH_WIDTH, GRAPH_HEIGHT),
                     (0, 0),
                     (GRAPH_WIDTH, 120),
-                    background_color='black',
+                    background_color='Black',
                     key=key+'GRAPH_')]]
     return sg.Col(layout, pad=(2, 2))
 
 def sgButton(name, key):
     btn = sg.Button(name, key=key, size=(15,2),
-                          button_color=('white','darkcyan'), pad=(1, 1))
+                          button_color=('White','Darkcyan'), pad=(1, 1))
     return btn
 
 class main_gui_class:
@@ -256,9 +256,9 @@ class main_gui_class:
         dic_color = {}
         for id in dic_btn:
             if (dic_btn[id] != ''):
-                dic_color[id] = ['black', 'white']
+                dic_color[id] = ('Black', 'White') #20210321
             else:
-                dic_color[id] = ['white', 'black']
+                dic_color[id] = ('White', 'Black') #20210321
 
         # pySimpleGUI
         sg.theme('Black')
@@ -268,7 +268,7 @@ class main_gui_class:
         red_x = "R0lGODlhEAAQAPeQAIsAAI0AAI4AAI8AAJIAAJUAAJQCApkAAJoAAJ4AAJkJCaAAAKYAAKcAAKcCAKcDA6cGAKgAAKsAAKsCAKwAAK0AAK8AAK4CAK8DAqUJAKULAKwLALAAALEAALIAALMAALMDALQAALUAALYAALcEALoAALsAALsCALwAAL8AALkJAL4NAL8NAKoTAKwbAbEQALMVAL0QAL0RAKsREaodHbkQELMsALg2ALk3ALs+ALE2FbgpKbA1Nbc1Nb44N8AAAMIWAMsvAMUgDMcxAKVABb9NBbVJErFYEq1iMrtoMr5kP8BKAMFLAMxKANBBANFCANJFANFEB9JKAMFcANFZANZcANpfAMJUEMZVEc5hAM5pAMluBdRsANR8AM9YOrdERMpIQs1UVMR5WNt8X8VgYMdlZcxtYtx4YNF/btp9eraNf9qXXNCCZsyLeNSLd8SSecySf82kd9qqc9uBgdyBgd+EhN6JgtSIiNuJieGHhOGLg+GKhOKamty1ste4sNO+ueenp+inp+HHrebGrefKuOPTzejWzera1O7b1vLb2/bl4vTu7fbw7ffx7vnz8f///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAJAALAAAAAAQABAAAAjUACEJHEiwYEEABniQKfNFgQCDkATQwAMokEU+PQgUFDAjjR09e/LUmUNnh8aBCcCgUeRmzBkzie6EeQBAoAAMXuA8ciRGCaJHfXzUMCAQgYooWN48anTokR8dQk4sELggBhQrU9Q8evSHiJQgLCIIfMDCSZUjhbYuQkLFCRAMAiOQGGLE0CNBcZYmaRIDLqQFGF60eTRoSxc5jwjhACFWIAgMLtgUocJFy5orL0IQRHAiQgsbRZYswbEhBIiCCH6EiJAhAwQMKU5DjHCi9gnZEHMTDAgAOw=="
         layout = [
                 # タイトル
-                [sg.Button('', image_data=red_x, key='-exit-',  button_color=('black', 'black'), tooltip='Closes'), sg.Text('Power of AI, RiKi,')],
+                [sg.Button('', image_data=red_x, key='-exit-',  button_color=('Black', 'Black'), tooltip='Closes'), sg.Text('Power of AI, RiKi,')],
                 # 内容
                 [
                     # Extention
@@ -286,7 +286,7 @@ class main_gui_class:
                             [sg.Text('')],
                             [sg.Button(dic_btn['16'], key=dic_cmd['16'], size=(18,2), button_color=dic_color['16'])],
                             [sg.Text('')],
-                            [sg.Text('Now Telework !', key='_STS_TELEWORK_', size=(18,1), justification='center', background_color='gray')],
+                            [sg.Text('Now Telework !', key='_STS_TELEWORK_', size=(18,1), justification='center', background_color='Gray')],
                         ], title='Extention Command'),
                     # vision
                     sg.Frame(layout=[
@@ -320,7 +320,7 @@ class main_gui_class:
                             [sg.Text('')],
                             [sg.Button(dic_btn['36'], key=dic_cmd['36'], size=(18,2), button_color=dic_color['36'])],
                             [sg.Text('')],
-                            [sg.Text('Now Recording !', key='_STS_RECORD_', size=(18,1), justification='center', background_color='gray')],
+                            [sg.Text('Now Recording !', key='_STS_RECORD_', size=(18,1), justification='center', background_color='Gray')],
                         ], title='Desktop Command'),
                     # kernel
                     sg.Frame(layout=[
@@ -337,7 +337,7 @@ class main_gui_class:
                             [sg.Text('')],
                             [sg.Button(dic_btn['46'], key=dic_cmd['46'], size=(18,2), button_color=dic_color['46'])],
                             [sg.Text('')],
-                            [sg.Text('Speech READY !', key='_STS_SPEECH_', size=(18,1), justification='center', background_color='gray')],
+                            [sg.Text('Speech READY !', key='_STS_SPEECH_', size=(18,1), justification='center', background_color='Gray')],
                         ], title='Kernel Command'),
                     # status
                     sg.Frame(layout=[
@@ -387,11 +387,11 @@ class main_gui_class:
 
             # status reset
             self.status_speech = False
-            self.window['_STS_SPEECH_'].update('', background_color='black', )
+            self.window['_STS_SPEECH_'].update('', background_color='Black', )
             self.status_record = False
-            self.window['_STS_RECORD_'].update('', background_color='black', )
+            self.window['_STS_RECORD_'].update('', background_color='Black', )
             self.status_telework = False
-            self.window['_STS_TELEWORK_'].update('', background_color='black', )
+            self.window['_STS_TELEWORK_'].update('', background_color='Black', )
 
         #except:
         #    self.window = None
@@ -434,17 +434,17 @@ class main_gui_class:
 
         # update status
         if (self.status_speech != True):
-            self.window['_STS_SPEECH_'].update('', background_color='black', )
+            self.window['_STS_SPEECH_'].update('', background_color='Black', )
         else:
-            self.window['_STS_SPEECH_'].update('Speech READY !', background_color='green')
+            self.window['_STS_SPEECH_'].update('Speech READY !', background_color='Green')
         if (self.status_record != True):
-            self.window['_STS_RECORD_'].update('', background_color='black', )
+            self.window['_STS_RECORD_'].update('', background_color='Black', )
         else:
-            self.window['_STS_RECORD_'].update('Now Recording !', background_color='magenta')
+            self.window['_STS_RECORD_'].update('Now Recording !', background_color='Magenta')
         if (self.status_telework != True):
-            self.window['_STS_TELEWORK_'].update('', background_color='black', )
+            self.window['_STS_TELEWORK_'].update('', background_color='Black', )
         else:
-            self.window['_STS_TELEWORK_'].update('Now Telework !', background_color='magenta')
+            self.window['_STS_TELEWORK_'].update('Now Telework !', background_color='Magenta')
 
         # 読取
         #try:
