@@ -141,6 +141,7 @@ import _v5_proc_recorder
 import _v5_proc_telework
 if (qPLATFORM == 'windows'):
     import _v5_proc_uploader
+import _v5_proc_pointer
 
 
 
@@ -266,6 +267,8 @@ class main_desktop:
         telework_switch      = 'on'
         uploader_thread      = None
         uploader_switch      = 'off'
+        pointer_thread       = None
+        pointer_switch       = 'off'
 
         if (self.runMode == 'debug'):
             capture_switch   = 'on'
@@ -273,24 +276,28 @@ class main_desktop:
             recorder_switch  = 'on'
             telework_switch  = 'on'
             uploader_switch  = 'on'
+            pointer_switch   = 'on'
         elif (self.runMode == 'hud'):
             capture_switch   = 'off'
             cvreader_switch  = 'off'
             recorder_switch  = 'on'
             telework_switch  = 'off'
             uploader_switch  = 'off'
+            pointer_switch   = 'off'
         elif (self.runMode == 'live'):
             capture_switch   = 'off'
             cvreader_switch  = 'on'
             recorder_switch  = 'on'
             telework_switch  = 'off'
             uploader_switch  = 'off'
+            pointer_switch   = 'off'
         elif (self.runMode == 'camera'):
             capture_switch   = 'off'
             cvreader_switch  = 'off'
             recorder_switch  = 'on'
             telework_switch  = 'off'
             uploader_switch  = 'off'
+            pointer_switch   = 'off'
         elif (self.runMode == 'assistant'):
             run_priority     = 'below' # 通常以下
             capture_switch   = 'on'
@@ -298,12 +305,14 @@ class main_desktop:
             recorder_switch  = 'on'
             telework_switch  = 'on'
             uploader_switch  = 'on'
+            pointer_switch   = 'on'
         elif (self.runMode == 'reception'):
             capture_switch   = 'off'
             cvreader_switch  = 'off'
             recorder_switch  = 'off'
             telework_switch  = 'off'
             uploader_switch  = 'off'
+            pointer_switch   = 'off'
         elif (self.runMode == 'recorder'):
             run_priority     = 'below' # 通常以下
             capture_switch   = 'off'
@@ -311,6 +320,7 @@ class main_desktop:
             recorder_switch  = 'on'
             telework_switch  = 'off'
             uploader_switch  = 'on'
+            pointer_switch   = 'off'
         elif (self.runMode == 'telework'):
             run_priority     = 'below' # 通常以下
             capture_switch   = 'off'
@@ -318,6 +328,7 @@ class main_desktop:
             recorder_switch  = 'off'
             telework_switch  = 'on'
             uploader_switch  = 'on'
+            pointer_switch   = 'on'
 
         if (qPLATFORM != 'windows'):
             uploader_switch  = 'off'
@@ -494,10 +505,29 @@ class main_desktop:
                 or (self.runMode == 'live'):
                     speechs.append({ 'text':u'「ブロブ連携」の機能が有効になりました。', 'wait':0, })
 
-            if (not uploader_thread is None) and (uploader_switch != 'on'):
-                uploader_thread.abort()
-                del uploader_thread
-                uploader_thread = None
+            if (not pointer_thread is None) and (pointer_switch != 'on'):
+                pointer_thread.abort()
+                del pointer_thread
+                pointer_thread = None
+
+            if (pointer_thread is None) and (pointer_switch == 'on'):
+                cn_s.put(['_guide_', 'pointer start!'])
+
+                pointer_thread  = _v5_proc_pointer.proc_pointer(
+                                    name='pointer', id='0',
+                                    runMode=self.runMode,
+                                    )
+                pointer_thread.begin()
+                time.sleep(1.00)
+
+                if (self.runMode == 'debug') \
+                or (self.runMode == 'live'):
+                    speechs.append({ 'text':u'「マウスポインタ表示」の機能が有効になりました。', 'wait':0, })
+
+            if (not pointer_thread is None) and (pointer_switch != 'on'):
+                pointer_thread.abort()
+                del pointer_thread
+                pointer_thread = None
 
             if (len(speechs) != 0):
                 qRiKi.speech(id=self.proc_id, speechs=speechs, lang='', )
@@ -642,6 +672,11 @@ class main_desktop:
                 while (uploader_thread.proc_r.qsize() != 0):
                     res_data  = uploader_thread.get()
 
+            # マウスポインタ機能
+            if (not pointer_thread is None):
+                while (pointer_thread.proc_r.qsize() != 0):
+                    res_data  = pointer_thread.get()
+
             # キャプチャ
             if (control == '_capture_'):
                 if (not main_img is None):
@@ -717,6 +752,11 @@ class main_desktop:
                 uploader_thread.abort()
                 del uploader_thread
                 uploader_thread = None
+
+            if (not pointer_thread is None):
+                pointer_thread.abort()
+                del pointer_thread
+                pointer_thread = None
 
             # 外部ＰＧリセット
             qFunc.kill('ffmpeg')
