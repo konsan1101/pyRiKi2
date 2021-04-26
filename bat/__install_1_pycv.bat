@@ -16,7 +16,21 @@ ECHO Python==3.7.9
 ECHO setuptools==50.3.2
 ECHO pyinstaller==4.1
 ECHO numpy==1.19.0
+ECHO matplotlib==3.0.3
 ECHO psutil==5.7.3
+ECHO mojimoji==0.0.11
+ECHO websocket-client==0.48.0
+
+ECHO;
+ECHO ----------
+ECHO 2021/04/26
+ECHO ----------
+ECHO Python==3.8.9
+ECHO setuptools==56.0.0
+ECHO pyinstaller==4.3
+ECHO numpy==1.20.2
+ECHO matplotlib==3.2.2
+ECHO psutil==5.8.0
 ECHO mojimoji==0.0.11
 ECHO websocket-client==0.48.0
 
@@ -144,15 +158,18 @@ rem ECHO ---------------------------
 rem ECHO pyinstaller compile setting
 rem rem  setuptools==49.6.0, 44.0.0
 rem ECHO ---------------------------
-rem rem  python -m pip  install --upgrade numpy
-rem      python -m pip  uninstall -y      numpy
-rem      python -m pip  install           numpy==1.19
 rem rem  python -m pip  install --upgrade setuptools
 rem rem  python -m pip  uninstall -y      setuptools
 rem rem  python -m pip  install           setuptools==49.6.0
 rem rem  python -m pip  install --upgrade pyinstaller
 rem rem  python -m pip  uninstall -y      pyinstaller
 rem rem  python -m pip  install           pyinstaller==3.6
+rem rem  python -m pip  install --upgrade numpy
+rem      python -m pip  uninstall -y      numpy
+rem      python -m pip  install           numpy==1.19
+rem rem  python -m pip  install --upgrade matplotlib==3.2.2
+rem      python -m pip  uninstall -y      matplotlib
+rem      python -m pip  install           matplotlib==3.2.2
 
 
 

@@ -39,8 +39,8 @@ rem python -m pip  install --upgrade matplotlib
 rem python -m pip  install --upgrade pyflakes
 rem python -m pip  install --upgrade pep8
 
-rem python -m pip  install --upgrade matplotlib
-    python -m pip  install --upgrade matplotlib==3.0.3
+    python -m pip  install --upgrade matplotlib
+rem python -m pip  install --upgrade matplotlib==3.2.2
     python -m pip  install --upgrade seaborn
     python -m pip  install --upgrade pandas
     python -m pip  install --upgrade mojimoji
@@ -72,15 +72,18 @@ rem ECHO ---------------------------
 rem ECHO pyinstaller compile setting
 rem rem  setuptools==49.6.0, 44.0.0
 rem ECHO ---------------------------
-rem rem  python -m pip  install --upgrade numpy
-rem      python -m pip  uninstall -y      numpy
-rem      python -m pip  install           numpy==1.19
 rem rem  python -m pip  install --upgrade setuptools
 rem rem  python -m pip  uninstall -y      setuptools
 rem rem  python -m pip  install           setuptools==49.6.0
 rem rem  python -m pip  install --upgrade pyinstaller
 rem rem  python -m pip  uninstall -y      pyinstaller
 rem rem  python -m pip  install           pyinstaller==3.6
+rem rem  python -m pip  install --upgrade numpy
+rem      python -m pip  uninstall -y      numpy
+rem      python -m pip  install           numpy==1.19
+rem rem  python -m pip  install --upgrade matplotlib==3.2.2
+rem      python -m pip  uninstall -y      matplotlib
+rem      python -m pip  install           matplotlib==3.2.2
 
 
 
