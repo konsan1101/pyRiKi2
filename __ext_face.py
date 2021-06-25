@@ -22,8 +22,8 @@ import cv2
 
 
 # 共通ルーチン
-import  _v5__qGuide
-qGuide= _v5__qGuide.qGuide_class()
+import  _v6__qGuide
+qGuide= _v6__qGuide.qGuide_class()
 
 
 

@@ -21,6 +21,10 @@ import queue
 import threading
 import subprocess
 
+import numpy as np
+import cv2
+from PIL import Image, ImageDraw, ImageFont
+
 
 
 # 共通ルーチン
@@ -104,17 +108,26 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+# フォント
+qFont_default = {'file':qPath_fonts + '_vision_font_ipaexg.ttf','offset':8}
+qFont_status  = {'file':qPath_fonts + '_vision_font_ipag.ttf','offset':8}
+qFont_zh = {'file':'C:/Windows/Fonts/msyh.ttc', 'offset':5}
+qFont_ko = {'file':'C:/Windows/Fonts/batang.ttc', 'offset':10}
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
+
+
+class proc_txt2img:
+
+    def __init__(self, name='thread', id='0', runMode='debug', drawWidth='0', ):
         self.runMode   = runMode
+        self.drawWidth = drawWidth
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -128,6 +141,10 @@ class proc_julius:
         self.proc_last = None
         self.proc_step = '0'
         self.proc_seq  = 0
+
+        # 変数設定
+        self.flag_background = 'on'
+        self.flag_blackwhite = 'black'
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -191,51 +208,27 @@ class proc_julius:
         # 初期設定
         self.proc_step = '1'
 
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
-
-        portId  = str(5500 + int(self.id))
-
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
+        # フォント
+        font16_default  = ImageFont.truetype(qFont_default['file'], 16, encoding='unic')
+        font16_defaulty =                    qFont_default['offset']
+        font16_status   = ImageFont.truetype(qFont_status[ 'file'], 16, encoding='unic')
+        font16_statusy  =                    qFont_status[ 'offset']
+        font32_default  = ImageFont.truetype(qFont_default['file'], 32, encoding='unic')
+        font32_defaulty =                    qFont_default['offset']
+        font48_default  = ImageFont.truetype(qFont_default['file'], 48, encoding='unic')
+        font48_defaulty =                    qFont_default['offset']
+        if (os.path.exists(qFont_zh['file'])):
+            font32_zh  = ImageFont.truetype(qFont_zh['file']     , 32, encoding='unic')
+            font32_zhy =                    qFont_zh['offset']
         else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
+            font32_zh  = ImageFont.truetype(qFont_default['file'], 32, encoding='unic')
+            font32_zhy =                    qFont_default['offset']
+        if (os.path.exists(qFont_ko['file'])):
+            font32_ko  = ImageFont.truetype(qFont_ko['file']     , 32, encoding='unic')
+            font32_koy =                    qFont_ko['offset']
+        else:
+            font32_ko  = ImageFont.truetype(qFont_default['file'], 32, encoding='unic')
+            font32_koy =                    qFont_default['offset']
 
         # 待機ループ
         self.proc_step = '5'
@@ -262,96 +255,143 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
+
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
+                out_name  = inp_name
+                out_value = '_ready_'
+                cn_s.put([out_name, out_value])
+
+            # 表示連携
+            elif (inp_name.lower() == '_flag_background_'):
+                self.flag_background = inp_value
+            elif (inp_name.lower() == '_flag_blackwhite_'):
+                self.flag_blackwhite = inp_value
 
             # 処理
-            if (inp_name.lower() == 'filename'):
+            elif (inp_name.lower() == '[txts]') \
+              or (inp_name.lower() == '[status]') \
+              or (inp_name.lower() == '[message_txts]'):
+
+                # 実行カウンタ
                 self.proc_last = time.time()
                 self.proc_seq += 1
                 if (self.proc_seq > 9999):
                     self.proc_seq = 1
 
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
                 # ビジー設定
                 if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
+                    qFunc.statusSet(self.fileBsy, True)
 
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
+                # 文字列確認
+                texts = inp_value
 
-                # julius 待機
-                jultxt  = ''
-
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
+                maxlen = 0
+                for i in range(0, len(texts)):
+                    if (texts[i][2:3] != ','):
+                            if (qFunc.in_japanese(texts[i]) == True):
+                                lenstr = len(texts[i]) * 2
+                            else:
+                                lenstr = len(texts[i])
                     else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
+                        if  (texts[i][:3] == 'ja,') \
+                        or  (texts[i][:3] == 'zh,') \
+                        or  (texts[i][:3] == 'ko,'):
+                            lenstr = len(texts[i]) * 2
+                        else:
+                            lenstr = len(texts[i])
+                    if (maxlen < lenstr):
+                        maxlen = lenstr
 
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
+                # 描写キャンバス作成
+                if (inp_name.lower() == '[status]'):
+                    draw_width  = int(self.drawWidth)
+                    draw_height = int(10 + (16 + 10) * len(texts))
+                    if (draw_width == 0):
+                        draw_width = 180
+                if (inp_name.lower() == '[txts]'):
+                    draw_width  = int(self.drawWidth)
+                    draw_height = int(10 + (32 + 10) * len(texts))
+                    if (draw_width == 0):
+                        draw_width = int(50 + 16 * maxlen)
+                if (inp_name.lower() == '[message_txts]'):
+                    draw_width  = int(self.drawWidth)
+                    draw_height = int(10 + (48 + 10) * len(texts))
+                    if (draw_width == 0):
+                        draw_width = int(100 + 24 * maxlen)
+
+                if (self.flag_blackwhite != 'white'):
+                    text_img  = Image.new('RGB', (draw_width, draw_height), (255,255,255))
+                else:
+                    text_img  = Image.new('RGB', (draw_width, draw_height), (  0,  0,  0))
+                text_draw = ImageDraw.Draw(text_img)
+
+                # 文字描写
+                for i in range(0, len(texts)):
+
+                    if (self.flag_blackwhite != 'white'):
+                        txt_color = (  0,  0,  0)
+                    else:
+                        txt_color = (255,255,255)
+
+                    if (inp_name.lower() == '[status]'):
+
+                        if (texts[i].find('busy!'   )>=0) \
+                        or (texts[i].find('slow!'   )>=0) \
+                        or (texts[i].find('disable!')>=0) \
+                        or (texts[i].find('rec!'    )>=0):
+                            text_draw.rectangle((0, 5 + (16 + 10)*i, draw_width, (16 + 10)*(i+1)-1), fill=(0xff, 0x00, 0xff))
+                            txt_color = (  0,  0,  0)
+                        if (texts[i].find('active'  )>=0):
+                            text_draw.rectangle((0, 5 + (16 + 10)*i, draw_width, (16 + 10)*(i+1)-1), fill=(0xff, 0xff, 0x00))
+                            txt_color = (  0,  0,  0)
+                        if (texts[i].find('ready'   )>=0):
+                            text_draw.rectangle((0, 5 + (16 + 10)*i, draw_width, (16 + 10)*(i+1)-1), fill=(0x00, 0xff, 0x00))
+                            txt_color = (  0,  0,  0)
+
+                        text_draw.text((5, (16 + 10)*i + font16_statusy), texts[i], font=font16_status, fill=txt_color)
+
+                    if (inp_name.lower() == '[txts]'):
+
+                        if (texts[i][2:3] != ','):
+                                text_draw.text((16, (32 + 10)*i + font32_defaulty), texts[i], font=font32_default, fill=txt_color)
+                        else:
+                            if   (texts[i][:3] == 'zh,'):
+                                text_draw.text((16, (32 + 10)*i + font32_zhy), texts[i], font=font32_zh, fill=txt_color)
+                            elif (texts[i][:3] == 'ko,'):
+                                text_draw.text((16, (32 + 10)*i + font32_koy), texts[i], font=font32_ko, fill=txt_color)
+                            else:
+                                text_draw.text((16, (32 + 10)*i + font32_defaulty), texts[i], font=font32_default, fill=txt_color)
+
+                    if (inp_name.lower() == '[message_txts]'):
+                        text_draw.text((24, (48 + 10)*i + font48_defaulty), texts[i], font=font48_default, fill=txt_color)
 
                 # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
-                cn_s.put([out_name, out_value])
+                if (inp_name.lower() == '[status]'):
+                    out_name  = '[status_img]'
+                    out_value = np.asarray(text_img)
+                    cn_s.put([out_name, out_value])
+                if (inp_name.lower() == '[txts]'):
+                    out_name  = '[txts_img]'
+                    out_value = np.asarray(text_img)
+                    cn_s.put([out_name, out_value])
+                if (inp_name.lower() == '[message_txts]'):
+                    out_name  = '[message_img]'
+                    out_value = np.asarray(text_img)
+                    cn_s.put([out_name, out_value])
 
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
-                else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
 
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
 
             # ビジー解除
-            qFunc.statusSet(self.fileBsy, False)
+            if (cn_r.qsize() == 0):
+                qFunc.statusSet(self.fileBsy, False)
 
             # アイドリング
             slow = False
             if (qFunc.statusCheck(qBusy_dev_cpu) == True):
-                slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
                 slow = True
 
             if (slow == True):
@@ -365,14 +405,11 @@ class proc_julius:
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
+            # レディ解除
+            qFunc.statusSet(self.fileRdy, False)
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
-            qFunc.statusSet(self.fileRdy, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -400,28 +437,41 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
+    # 設定
+    cv2.namedWindow('Display', 1)
+    cv2.moveWindow( 'Display', 0, 0)
+
+
+
     # テスト
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    txt2img_thread = proc_txt2img('txt2img', '0', )
+    txt2img_thread.begin()
 
+    txt2img_thread.put(['[txts]', [u'おはようございます']])
+    resdata = txt2img_thread.checkGet()
+    if (resdata[0] == '[txts_img]'):
+        img = resdata[1].copy()
+        cv2.namedWindow('Display',  1)
+        cv2.imshow('Display', img )
+        cv2.waitKey(1)
+        time.sleep(5)
 
+    txt2img_thread.put(['flag_blackwhite', 'white'])
 
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
-    time.sleep(3.00)
+    txt2img_thread.put(['[txts]', [u'こんにちは', u'はじめまして']])
+    resdata = txt2img_thread.checkGet()
+    if (resdata[0] == '[txts_img]'):
+        img = resdata[1].copy()
+        cv2.namedWindow('Display',  1)
+        cv2.imshow('Display', img )
+        cv2.waitKey(1)
+        time.sleep(5)
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+    time.sleep(1)
+    txt2img_thread.abort()
+    del txt2img_thread
 
-    time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
-
-
-
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    cv2.destroyAllWindows()
 
 
 

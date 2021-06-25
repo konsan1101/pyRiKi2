@@ -21,6 +21,9 @@ import queue
 import threading
 import subprocess
 
+import numpy as np
+import cv2
+
 
 
 # 共通ルーチン
@@ -30,6 +33,8 @@ import  _v6__qFunc
 qFunc = _v6__qFunc.qFunc_class()
 import  _v6__qLog
 qLog  = _v6__qLog.qLog_class()
+import  _v6__qFFmpeg
+qFFmpeg=_v6__qFFmpeg.qFFmpeg_class()
 
 qPLATFORM        = qRiKi.getValue('qPLATFORM'        )
 qRUNATTR         = qRiKi.getValue('qRUNATTR'         )
@@ -104,17 +109,25 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+class proc_capture:
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
-        self.runMode   = runMode
+    def __init__(self, name='thread', id='0', runMode='debug', 
+        capStretch='0', capRotate='0', capZoom='1.0', capFps='2', ):
+
+        self.runMode    = runMode
+        self.capStretch = capStretch
+        self.capRotate  = capRotate
+        self.capZoom    = capZoom
+        self.capFps     = '5'
+        if (capFps.isdigit()):
+            self.capFps = str(capFps)
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -128,6 +141,11 @@ class proc_julius:
         self.proc_last = None
         self.proc_step = '0'
         self.proc_seq  = 0
+
+        # 変数設定
+        self.blue_img = np.zeros((240,320,3), np.uint8)
+        cv2.rectangle(self.blue_img,(0,0),(320,240),(255,0,0),-1)
+        cv2.putText(self.blue_img, 'No Image !', (40,80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255))
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -191,51 +209,9 @@ class proc_julius:
         # 初期設定
         self.proc_step = '1'
 
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
-
-        portId  = str(5500 + int(self.id))
-
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
+        # ＦＰＳ計測
+        qFPS_class = _v6__qFunc.qFPS_class()
+        qFPS_last  = time.time()
 
         # 待機ループ
         self.proc_step = '5'
@@ -262,117 +238,146 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
 
-            # 処理
-            if (inp_name.lower() == 'filename'):
-                self.proc_last = time.time()
-                self.proc_seq += 1
-                if (self.proc_seq > 9999):
-                    self.proc_seq = 1
-
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
-                # ビジー設定
-                if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
-
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
-
-                # julius 待機
-                jultxt  = ''
-
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
-                    else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
-
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
-
-                # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
+                out_name  = inp_name
+                if (not capture is None):
+                    out_value = '_ready_'
+                else:
+                    out_value = '!ready'
                 cn_s.put([out_name, out_value])
 
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
-                else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
+            # 連携情報
+            if (inp_name.lower() == '_capstretch_'):
+                self.capStretch = inp_value
+                qFPS_last = time.time() - 60
+            if (inp_name.lower() == '_caprotate_'):
+                self.capRotate = inp_value
+                qFPS_last = time.time() - 60
+            if (inp_name.lower() == '_capzoom_'):
+                self.capZoom = inp_value
+                qFPS_last = time.time() - 60
 
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
 
-            # ビジー解除
-            qFunc.statusSet(self.fileBsy, False)
+
+            # 画像処理
+            if (cn_s.qsize() == 0):
+            #if (True):
+
+                # 画像取得
+                work_path = qPath_work + 'capture_' + '{:01}'.format(self.proc_seq % 10)
+                frame = qFFmpeg.capture(dev='desktop', full=False, work_path=work_path, )
+                #frame = qFFmpeg.capture(dev='desktop', full=True, work_path=work_path, )
+
+                if (not frame is None):
+
+                    # ビジー設定 (ready)
+                    if (qFunc.statusCheck(self.fileBsy) == False):
+                        qFunc.statusSet(self.fileBsy, True)
+                        if (str(self.id) == '0'):
+                            qFunc.statusSet(qBusy_d_inp, True)
+
+                    # 実行カウンタ
+                    self.proc_last = time.time()
+                    self.proc_seq += 1
+                    if (self.proc_seq > 9999):
+                        self.proc_seq = 1
+
+                    # frame_img
+                    frame_img = frame.copy()
+                    frame_height, frame_width = frame_img.shape[:2]
+                    input_img = frame.copy()
+                    input_height, input_width = input_img.shape[:2]
+
+                    # 台形補正
+                    if (int(self.capStretch) != 0):
+                        x = int((input_width/2) * abs(int(self.capStretch))/100)
+                        if (int(self.capStretch) > 0):
+                            perspective1 = np.float32([ [x, 0], [input_width-x, 0], [input_width, input_height], [0, input_height] ])
+                        else:
+                            perspective1 = np.float32([ [0, 0], [input_width, 0], [input_width-x, input_height], [x, input_height] ])
+                        perspective2 = np.float32([ [0, 0], [input_width, 0], [input_width, input_height], [0, input_height] ])
+                        transform_matrix = cv2.getPerspectiveTransform(perspective1, perspective2)
+                        input_img = cv2.warpPerspective(input_img, transform_matrix, (input_width, input_height))
+
+                    # 画像回転
+                    if   (int(self.capRotate) == -180):
+                        input_img = cv2.flip(input_img, 0) # 180 Rotation Y
+                    elif (int(self.capRotate) == -360):
+                        input_img = cv2.flip(input_img, 1) # 180 Rotation X
+                    elif (abs(int(self.capRotate)) !=   0):
+                        width2    = int((input_width - input_height)/2)
+                        rect_img  = cv2.resize(input_img[0:input_height, width2:width2+input_height], (960,960))
+                        rect_mat  = cv2.getRotationMatrix2D((480, 480), -int(self.capRotate), 1.0)
+                        rect_r    = cv2.warpAffine(rect_img, rect_mat, (960, 960), flags=cv2.INTER_LINEAR)
+                        input_img = cv2.resize(rect_r, (input_height, input_height))
+                        input_height, input_width = input_img.shape[:2]
+
+                    # ズーム
+                    if (float(self.capZoom) != 1):
+                        zm = float(self.capZoom)
+                        x1 = int((input_width-(input_width/zm))/2)
+                        x2 = input_width - x1
+                        y1 = int((input_height-(input_height/zm))/2)
+                        y2 = input_height - y1
+                        zm_img = input_img[y1:y2, x1:x2]
+                        input_img = zm_img.copy()
+                        input_height, input_width = input_img.shape[:2]
+
+                    # ＦＰＳ計測
+                    fps = qFPS_class.get()
+                    if ((time.time() - qFPS_last) > 5):
+                        qFPS_last  = time.time()
+
+                        # 結果出力(fps)
+                        out_name  = '_fps_'
+                        out_value = '{:.1f}'.format(fps)
+                        cn_s.put([out_name, out_value])
+
+                        # 結果出力(reso)
+                        out_name  = '_reso_'
+                        out_value = str(input_width) + 'x' + str(input_height)
+                        if (float(self.capZoom) != 1):
+                            out_value += ' (Zoom=' + self.capZoom + ')'
+                        cn_s.put([out_name, out_value])
+
+                    # 結果出力
+                    if (cn_s.qsize() == 0):
+                        out_name  = '[img]'
+                        out_value = input_img.copy()
+                        cn_s.put([out_name, out_value])
+
+
 
             # アイドリング
             slow = False
-            if (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
                 slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
+            if  (qFunc.statusCheck(qBusy_dev_scn) == True):
+                slow = True
+            if  (qFunc.statusCheck(qBusy_d_play   ) == True) \
+            or  (qFunc.statusCheck(qBusy_d_browser) == True):
                 slow = True
 
             if (slow == True):
                 time.sleep(1.00)
             else:
-                if (cn_r.qsize() == 0):
-                    time.sleep(0.25)
-                else:
-                    time.sleep(0.05)
+                time.sleep((1/int(self.capFps))/2)
 
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
-
-            # ビジー解除
-            qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
+            # レディ解除
             qFunc.statusSet(self.fileRdy, False)
+
+            # ビジー解除 (!ready)
+            qFunc.statusSet(self.fileBsy, False)
+            if (str(self.id) == '0'):
+                qFunc.statusSet(qBusy_d_inp, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -400,28 +405,44 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # テスト
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    # 設定
+    cv2.namedWindow('Display', 1)
+    cv2.moveWindow( 'Display', 0, 0)
+
+    capture_thread = proc_capture(name='capture', id='0', runMode='debug', 
+                                  capStretch='0', capRotate='0', capZoom='1.0', capFps='2', )
+    capture_thread.begin()
 
 
 
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
-    time.sleep(3.00)
+    # ループ
+    chktime = time.time()
+    while ((time.time() - chktime) < 15):
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+        res_data  = capture_thread.get()
+        res_name  = res_data[0]
+        res_value = res_data[1]
+        if (res_name != ''):
+            if (res_name == '[window]'):
+                pass
+            elif (res_name == '[img]'):
+                cv2.imshow('Display', res_value.copy() )
+                cv2.waitKey(1)
+            else:
+                print(res_name, res_value, )
+
+        #if (capture_thread.proc_s.qsize() == 0):
+        #    capture_thread.put(['_status_', ''])
+
+        time.sleep(0.02)
 
     time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
+    capture_thread.abort()
+    del capture_thread
 
 
 
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    cv2.destroyAllWindows()
 
 
 

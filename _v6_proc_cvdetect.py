@@ -21,6 +21,14 @@ import queue
 import threading
 import subprocess
 
+import numpy as np
+import cv2
+
+
+
+# 外部プログラム
+qExt_face                = '__ext_face.bat'
+
 
 
 # 共通ルーチン
@@ -104,17 +112,42 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+class proc_cvdetect:
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug', 
+                    casName='face', procMode='640x480', ):
         self.runMode   = runMode
+
+        self.casName   = casName
+        if (casName == 'cars'):
+            self.casName = '_xml/_vision_opencv_cars.xml'
+        if (casName == 'face'):
+            self.casName = '_xml/_vision_opencv_face.xml'
+        if (casName == 'fullbody'):
+            self.casName = '_xml/_vision_opencv_fullbody.xml'
+        if (self.casName != 'none'):
+            self.cas_nm  = self.casName[:-4]
+            self.cas_nm  = self.cas_nm.replace('_xml/_vision_opencv_', '')
+            self.cascade = cv2.CascadeClassifier(self.casName)
+            self.haar_scale    = 1.1
+            self.min_neighbors = 10
+            self.min_size      = ( 15, 15)
+            if (self.cas_nm == 'cars'):
+                self.haar_scale    = 1.1
+                self.min_neighbors = 3
+                self.min_size      = ( 15, 15)
+
+        self.procMode  = procMode
+        procWidth, procHeight = qFunc.getResolution(procMode)
+        self.procWidth = procWidth
+        self.procHeight= procHeight
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -191,52 +224,6 @@ class proc_julius:
         # 初期設定
         self.proc_step = '1'
 
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
-
-        portId  = str(5500 + int(self.id))
-
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
-
         # 待機ループ
         self.proc_step = '5'
 
@@ -262,117 +249,185 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
 
-            # 処理
-            if (inp_name.lower() == 'filename'):
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
+                out_name  = inp_name
+                out_value = '_ready_'
+                cn_s.put([out_name, out_value])
+
+
+
+            # 画像受取
+            if (inp_name.lower() == '[img]'):
+
+                # 実行カウンタ
                 self.proc_last = time.time()
                 self.proc_seq += 1
                 if (self.proc_seq > 9999):
                     self.proc_seq = 1
 
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
                 # ビジー設定
                 if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
+                    qFunc.statusSet(self.fileBsy, True)
 
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
+                # 処理
 
-                # julius 待機
-                jultxt  = ''
+                image_img   = inp_value.copy()
+                image_height, image_width = image_img.shape[:2]
 
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
-                    else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
+                output_img  = image_img.copy()
 
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
-
-                # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
-                cn_s.put([out_name, out_value])
-
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
+                proc_width  = image_width
+                proc_height = image_height
+                if (proc_width  > self.procWidth):
+                    proc_width  = self.procWidth
+                    proc_height = int(proc_width * image_height / image_width)
+                if (proc_width  != image_width ) \
+                or (proc_height != image_height):
+                    proc_img = cv2.resize(image_img, (proc_width, proc_height))
                 else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
+                    proc_img = image_img.copy()
+                    proc_height, proc_width = proc_img.shape[:2]
 
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
+                gray1 = cv2.cvtColor(proc_img, cv2.COLOR_BGR2GRAY)
+                gray2 = cv2.equalizeHist(gray1)
+
+                nowTime = datetime.datetime.now()
+                stamp = nowTime.strftime('%Y%m%d.%H%M%S')
+
+                hit_count = 0
+                hit_img   = None
+
+                if (self.casName != 'none'):
+
+                    rects = self.cascade.detectMultiScale(gray2, scaleFactor=self.haar_scale, minNeighbors=self.min_neighbors, minSize=self.min_size)
+                    if (not rects is None):
+                        #qLog.log('debug', self.proc_id, 'detect count = ' + str(len(rects)), )
+                        for (hit_x, hit_y, hit_w, hit_h) in rects:
+                            hit_count += 1
+                            x  = int(hit_x * image_width  / proc_width )
+                            y  = int(hit_y * image_height / proc_height)
+                            w  = int(hit_w * image_width  / proc_width )
+                            h  = int(hit_h * image_height / proc_height)
+                            if (self.cas_nm == 'face'):
+                                if (x > 10):
+                                    x -= 10
+                                    w += 20
+                                if (y > 10):
+                                    y -= 10
+                                    h += 20
+                            if (x < 0):
+                                x = 0
+                            if (y < 0):
+                                y = 0
+                            if ((x + w) > image_width):
+                                    w = image_width - x
+                            if ((y + h) > image_height):
+                                    h = image_height - y
+                            cv2.rectangle(output_img, (x,y), (x+w,y+h), (0,0,255), 2)
+
+                            hit_img = cv2.resize(image_img[y:y+h, x:x+w],(h,w))
+
+                            if (hit_count == 1):
+
+                                # 結果出力
+                                out_name  = '[detect]'
+                                out_value = hit_img.copy()
+                                cn_s.put([out_name, out_value])
+
+                                # ファイル出力
+                                fn0 = stamp + '.' + self.cas_nm + '.jpg'
+                                fn1 = qPath_rec      + fn0
+                                fn2 = qPath_v_detect + fn0
+                                if (not os.path.exists(fn1)) and (not os.path.exists(fn2)):
+                                    try:
+                                        cv2.imwrite(fn1, hit_img)
+                                        cv2.imwrite(fn2, hit_img)
+
+                                        if (self.cas_nm == 'face'):
+
+                                            # 外部プログラム
+                                            if (self.runMode == 'debug') \
+                                            or (self.runMode == 'reception'):
+                                                if (os.name == 'nt'):
+                                                    if (os.path.exists(qExt_face)):
+                                                        ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, ], )
+                                                                #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+                                    except Exception as e:
+                                        pass
+
+                            # 結果出力
+                            out_name  = '[array]'
+                            out_value = hit_img.copy()
+                            cn_s.put([out_name, out_value])
+
+                if (hit_count == 0):
+
+                    # 結果出力
+                    out_name  = ''
+                    out_value = ''
+                    cn_s.put([out_name, out_value])
+
+                else:
+
+                    # 結果出力
+                    #out_name  = '[photo]'
+                    #out_value = image_img.copy()
+                    #cn_s.put([out_name, out_value])
+
+                    # 結果出力
+                    out_name  = '[img]'
+                    out_value = output_img.copy()
+                    cn_s.put([out_name, out_value])
+
+                    # ファイル出力
+                    fn3 = qPath_rec     + stamp + '.detect.jpg'
+                    fn4 = qPath_v_photo + stamp + '.detect.jpg'
+                    if (not os.path.exists(fn3)) and (not os.path.exists(fn4)):
+                        try:
+                            cv2.imwrite(fn3, image_img)
+                            cv2.imwrite(fn4, image_img)
+                        except Exception as e:
+                            pass
+
+                time.sleep(0.50)
+
+
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
 
             # アイドリング
             slow = False
-            if (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cpu  ) == True):
                 slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
+            if  (qFunc.statusCheck(qBusy_dev_cam  ) == True):
+                slow = True
+            if  (qFunc.statusCheck(qBusy_d_play   ) == True) \
+            or  (qFunc.statusCheck(qBusy_d_browser) == True):
                 slow = True
 
             if (slow == True):
                 time.sleep(1.00)
             else:
                 if (cn_r.qsize() == 0):
-                    time.sleep(0.25)
+                    time.sleep(0.50)
                 else:
-                    time.sleep(0.05)
+                    time.sleep(0.25)
 
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
+            # レディ解除
+            qFunc.statusSet(self.fileRdy, False)
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
-            qFunc.statusSet(self.fileRdy, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -400,28 +455,65 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # テスト
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    # 設定
+    cv2.namedWindow('Display', 1)
+    cv2.moveWindow( 'Display', 0, 0)
 
+    cvdetect_thread = proc_cvdetect('detect', '0', procMode='full',)
+    cvdetect_thread.begin()
 
-
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
+    inp = cv2.imread('_photos/_photo_face.jpg')
+    cv2.imshow('Display', inp )
+    cv2.waitKey(1)
     time.sleep(3.00)
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+    cvdetect_thread.put(['[img]', inp.copy()])
+
+
+
+    # ループ
+    chktime = time.time()
+    while ((time.time() - chktime) < 15):
+        res_data  = cvdetect_thread.get()
+        res_name  = res_data[0]
+        res_value = res_data[1]
+        if (res_name != ''):
+            if (res_name == '[img]'):
+                print('img')
+                img = cv2.resize(res_value, (320, 240), )
+                cv2.imshow('Display', img )
+                cv2.waitKey(1)
+                time.sleep(1.00)
+            if (res_name == '[array]'):
+                print('array')
+                img = cv2.resize(res_value, (320, 240), )
+                cv2.imshow('Display', img )
+                cv2.waitKey(1)
+                time.sleep(1.00)
+            if (res_name == '[photo]'):
+                print('photo')
+                img = cv2.resize(res_value, (320, 240), )
+                cv2.imshow('Display', img )
+                cv2.waitKey(1)
+                time.sleep(1.00)
+            if (res_name == '[detect]'):
+                print('detect')
+                img = cv2.resize(res_value, (320, 240), )
+                cv2.imshow('Display', img )
+                cv2.waitKey(1)
+                time.sleep(1.00)
+            #else:
+            #    print(res_name, res_value, )
+
+        time.sleep(0.05)
+
+
 
     time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
+    cvdetect_thread.abort()
+    del cvdetect_thread
 
-
-
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    cv2.destroyAllWindows()
 
 
 

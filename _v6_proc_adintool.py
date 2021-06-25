@@ -23,6 +23,11 @@ import subprocess
 
 
 
+# インターフェース
+qCtrl_control_speech     = 'temp/control_speech.txt'
+
+
+
 # 共通ルーチン
 import  _v6__qRiKi
 qRiKi = _v6__qRiKi.qRiKi_class()
@@ -104,17 +109,25 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+class proc_adintool:
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug', 
+        micDev='0', micType='bluetooth', micGuide='sound', micLevel='777', ):
+
+        self.path      = qPath_s_inp
+
         self.runMode   = runMode
+        self.micDev    = micDev
+        self.micType   = micType
+        self.micGuide  = micGuide
+        self.micLevel  = micLevel
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -191,51 +204,19 @@ class proc_julius:
         # 初期設定
         self.proc_step = '1'
 
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
+        adin_rewind   = '555'
+        adin_headmg   = '333'
+        adin_tailmg   = '444'
+        vadLevel      = '1'
+        if (self.micLevel == '1'):
+            vadLevel  = '3'
 
-        portId  = str(5500 + int(self.id))
+        adintool_exe = None
+        adintool_gui = None
 
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
+        # ガイド音
+        if (self.micGuide != 'off'):
+            qFunc.guideSound('_up')
 
         # 待機ループ
         self.proc_step = '5'
@@ -262,96 +243,145 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
 
-            # 処理
-            if (inp_name.lower() == 'filename'):
-                self.proc_last = time.time()
-                self.proc_seq += 1
-                if (self.proc_seq > 9999):
-                    self.proc_seq = 1
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
 
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
-                # ビジー設定
-                if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
-
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
-
-                # julius 待機
-                jultxt  = ''
-
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
+                out_name  = inp_name
+                out_value = '!ready'
+                if (not adintool_exe is None):
+                    files = glob.glob(self.path + '*')
+                    if (len(files) == 0):
+                        out_value = '_ready_'
                     else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
+                        out_value = '_busy_'
 
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
-
-                # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
                 cn_s.put([out_name, out_value])
 
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
-                else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
 
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
 
-            # ビジー解除
-            qFunc.statusSet(self.fileBsy, False)
+            # 処理
+
+            # on ?
+            sw = 'off'
+            if  (qFunc.statusCheck(qBusy_dev_mic) == False):
+                if (self.micDev.isdigit()):
+                    if (self.micType == 'usb'):
+                            sw = 'on'
+                    else:
+                        if  (qFunc.statusWait_false(qBusy_s_ctrl,  1) == False) \
+                        and (qFunc.statusWait_false(qBusy_s_wav,   1) == False) \
+                        and (qFunc.statusWait_false(qBusy_s_STT,   1) == False) \
+                        and (qFunc.statusWait_false(qBusy_s_TTS,   1) == False) \
+                        and (qFunc.statusWait_false(qBusy_s_TRA,   1) == False) \
+                        and (qFunc.statusWait_false(qBusy_s_play,  1) == False):
+                            sw = 'on'
+
+            # off -> on
+            if (sw == 'on'):
+                if (adintool_exe is None):
+
+                    # 実行カウンタ
+                    self.proc_last = time.time()
+                    self.proc_seq += 1
+                    if (self.proc_seq > 9999):
+                        self.proc_seq = 1
+
+                    # ビジー設定 (ready)
+                    if (qFunc.statusCheck(self.fileBsy) == False):
+                        qFunc.statusSet(self.fileBsy, True)
+                    if (str(self.id) == '0'):
+                        qFunc.statusSet(qBusy_s_inp, True)
+
+                    # ガイド音
+                    if (self.micGuide == 'on' or self.micGuide == 'sound') \
+                    or (qFunc.statusCheck(qRdy__s_force) == True):
+                        qFunc.guideSound('_ready')
+
+                    if (True):
+                        nowTime = datetime.datetime.now()
+                        filename = self.path + nowTime.strftime('%Y%m%d.%H%M%S') +'.adintool'
+                        adintool_exe = subprocess.Popen(['adintool', '-in', 'mic', \
+                                        '-rewind', adin_rewind, '-headmargin', adin_headmg, '-tailmargin', adin_tailmg, \
+                                        '-fvad', vadLevel, '-lv', self.micLevel, \
+                                        '-out', 'file', '-filename', filename, '-startid', '5001', ] , \
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+                if (adintool_gui is None) and (os.name == 'nt'):
+                    if (self.micGuide == 'on') or (self.micGuide == 'display') \
+                    or (qFunc.statusCheck(qRdy__s_force) == True):
+                        adintool_gui = subprocess.Popen(['adintool-gui', '-in', 'mic', \
+                                        '-rewind', adin_rewind, '-headmargin', adin_headmg, '-tailmargin', adin_tailmg, \
+                                        '-lv', self.micLevel,] , \
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+            # フォース 終了
+            if (not adintool_gui is None):
+                if (self.micGuide != 'on') and (self.micGuide != 'display') \
+                and (qFunc.statusCheck(qRdy__s_force) != True):
+                    adintool_gui.terminate()
+                    adintool_gui = None
+
+            # off, accept ?
+            sw = 'on'
+            if (qFunc.statusCheck(qBusy_dev_mic) == True):
+                    sw = 'off'
+            if (self.micType == 'bluetooth'):
+                if  (qFunc.statusCheck(qBusy_s_play) == True):
+                    sw = 'off'
+            if (not adintool_exe is None):
+                files = glob.glob(self.path + '*')
+                if (len(files) > 0):
+                    chktime = time.time()
+                    while (len(files) > 0) and ((time.time() - chktime) < 2):
+                        time.sleep(0.20)
+                        files = glob.glob(self.path + '*')
+                    if (len(files) == 0):
+                        sw = 'accept'
+
+            # on -> off, accept
+            if (sw == 'off') or (sw == 'accept'):
+
+                # adintool 終了
+                if (not adintool_gui is None):
+                    adintool_gui.terminate()
+                    adintool_gui = None
+
+                if (self.micType == 'bluetooth'):
+
+                    # adintool 終了
+                    if (not adintool_exe is None):
+                        adintool_exe.terminate()
+                        adintool_exe = None
+
+                    # ビジー解除 (!ready)
+                    qFunc.statusSet(self.fileBsy, False)
+                    if (str(self.id) == '0'):
+                        qFunc.statusSet(qBusy_s_inp, False)
+
+                # ガイド音
+                time.sleep(0.50)
+                if (sw == 'accept'):
+                    if (self.micGuide == 'on') or (self.micGuide == 'sound') \
+                    or (qFunc.statusCheck(qRdy__s_force) == True):
+                        qFunc.guideSound('_accept')
+
+                # フォース 終了
+                if (qFunc.statusCheck(qRdy__s_force) == True):
+                    qFunc.statusSet(qRdy__s_force, False)
+
+                time.sleep(0.50)
+
+
 
             # アイドリング
             slow = False
-            if (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
                 slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
+            if  (qFunc.statusCheck(qBusy_dev_mic) == True):
                 slow = True
 
             if (slow == True):
@@ -365,14 +395,26 @@ class proc_julius:
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
-
-            # ビジー解除
-            qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
+            # レディ解除
             qFunc.statusSet(self.fileRdy, False)
+
+            # adintool 終了
+            if (not adintool_gui is None):
+                adintool_gui.terminate()
+                adintool_gui = None
+
+            if (not adintool_exe is None):
+                adintool_exe.terminate()
+                adintool_exe = None
+
+            # ビジー解除 (!ready)
+            qFunc.statusSet(self.fileBsy, False)
+            if (str(self.id) == '0'):
+                qFunc.statusSet(qBusy_s_inp, False)
+
+            # ガイド音
+            if (self.micGuide != 'off'):
+                qFunc.guideSound('_down')
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -400,28 +442,76 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # テスト
-    qFunc.kill('julius')
+    # 初期設定
+    qFunc.remove(qCtrl_control_speech)
+    qRiKi.statusReset_speech(False)
+
     qFunc.kill('adintool')
+    qFunc.kill('adintool-gui')
+
+    # パラメータ
+    runMode = 'debug'
+    if (len(sys.argv) >= 2):
+        runMode  = str(sys.argv[1]).lower()
+
+    # 開始
+    adintool_thread = proc_adintool('adintool', '0', runMode, )
+    adintool_thread.begin()
 
 
 
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
-    time.sleep(3.00)
+    # テスト実行
+    if (len(sys.argv) < 2):
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+        chktime = time.time()
+        while ((time.time() - chktime) < 15):
 
-    time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
+            res_data  = adintool_thread.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            if (res_name != ''):
+                print(res_name, res_value, )
+
+            if (adintool_thread.proc_s.qsize() == 0):
+                adintool_thread.put(['_status_', ''])
+
+            time.sleep(0.05)
 
 
 
-    qFunc.kill('julius')
+    # 単体実行
+    if (len(sys.argv) >= 2):
+
+        # 待機ループ
+        while (True):
+
+            # 終了確認
+            control = ''
+            txts, txt = qFunc.txtsRead(qCtrl_control_speech)
+            if (txts != False):
+                qLog.log('info', str(txt))
+                if (txt == '_end_'):
+                    break
+                else:
+                    qFunc.remove(qCtrl_control_speech)
+                    control = txt
+
+            # メッセージ
+            res_data  = adintool_thread.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            #if (res_name != ''):
+            #    print(res_name, res_value, )
+
+            time.sleep(0.50)
+
+
+
+    # 終了
+    adintool_thread.abort()
+    del adintool_thread
+
     qFunc.kill('adintool')
-
+    qFunc.kill('adintool-gui')
 
 

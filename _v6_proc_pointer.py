@@ -21,6 +21,9 @@ import queue
 import threading
 import subprocess
 
+import pyautogui
+import random
+
 
 
 # 共通ルーチン
@@ -104,9 +107,33 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+import _v6__qRiKi_key
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
+config_file = '_v6_proc_pointer_key.json'
+
+qRiKi_key = _v6__qRiKi_key.qRiKi_key_class()
+res, dic = qRiKi_key.getCryptJson(config_file=config_file, auto_crypt=False, )
+if (res == False):
+    dic['_crypt_']      = 'none'
+    dic['mouseEnable']  = 'yes'
+    dic['mousePointer'] = 'yes'
+    dic['changeScreen'] = 'yes'
+    dic['beatSec']      = 10
+    dic['waitSec']      = 60
+    dic['dayStart']     = '06:55:00'
+    dic['dayEnd']       = '16:05:00'
+    dic['lunchStart']   = '12:05:00'
+    dic['lunchEnd']     = '12:55:00'
+    res = qRiKi_key.putCryptJson(config_file=config_file, put_dic=dic, )
+
+
+
+class proc_pointer:
+
+    def __init__(self, name='thread', id='0', runMode='debug', ):
+
+        self.path      = qPath_d_ctrl
+
         self.runMode   = runMode
 
         self.breakFlag = threading.Event()
@@ -114,7 +141,7 @@ class proc_julius:
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -128,6 +155,70 @@ class proc_julius:
         self.proc_last = None
         self.proc_step = '0'
         self.proc_seq  = 0
+
+        json_file = '_v6_proc_pointer_key.json'
+        self.mouseEnable  = 'yes'
+        self.mousePointer = 'yes'
+        self.changeScreen = 'yes'
+        self.beatSec      = 10
+        self.waitSec      = 60
+        self.dayStart     = '06:55:00'
+        self.dayEnd       = '16:05:00'
+        self.lunchStart   = '12:05:00'
+        self.lunchEnd     = '12:55:00'
+        res, json_dic = qRiKi_key.getCryptJson(config_file=json_file, auto_crypt=False, )
+        if (res == True):
+            self.mouseEnable  = dic['mouseEnable']
+            self.mousePointer = dic['mousePointer']
+            self.screenChange = dic['changeScreen']
+            self.beatSec      = dic['beatSec']
+            self.waitSec      = dic['waitSec']
+            self.dayStart     = dic['dayStart']
+            self.dayEnd       = dic['dayEnd']
+            self.lunchStart   = dic['lunchStart']
+            self.lunchEnd     = dic['lunchEnd']
+        qLog.log('info', self.proc_id, 'mouseEnable  = ' + str(self.mouseEnable ), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'mousePointer = ' + str(self.mousePointer), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'changeScreen = ' + str(self.changeScreen), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'beatSec      = ' + str(self.beatSec     ), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'waitSec      = ' + str(self.waitSec     ), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'dayStart     = ' + str(self.dayStart    ), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'dayEnd       = ' + str(self.dayEnd      ), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'lunchStart   = ' + str(self.lunchStart  ), display=self.logDisp, )
+        qLog.log('info', self.proc_id, 'lunchEnd     = ' + str(self.lunchEnd    ), display=self.logDisp, )
+
+        try:
+            (w, h) = pyautogui.size()
+        except Exception as e:
+            w = 640
+            h = 480
+        self.sc_width  = w
+        self.sc_height = h
+        qLog.log('info', self.proc_id, 'Screen = (' + str(self.sc_width) + ', ' + str(self.sc_height) + ')', display=self.logDisp, )
+
+        if (self.mouseEnable.lower()  == 'yes') \
+        or (self.mousePointer.lower() == 'yes'):
+            qLog.log('info', self.proc_id, 'pyautogui.FAILSAFE = False', display=self.logDisp, )
+            try:
+                pyautogui.FAILSAFE = False
+            except Exception as e:
+                pass
+
+        if (self.changeScreen.lower()  == 'yes'):
+            qLog.log('info', self.proc_id, 'Change Sub Screen ...', display=self.logDisp, )
+            try:
+                pyautogui.keyDown('ctrlleft')
+                pyautogui.keyDown('winleft')
+                pyautogui.press('right')
+                pyautogui.keyUp('winleft')
+                pyautogui.keyUp('ctrlleft')
+            except Exception as e:
+                pass
+
+        self.last_x = self.sc_width / 2
+        self.last_y = self.sc_height / 2
+        self.last_t = time.time()
+        self.moveTo(self.last_x, self.last_y)
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -191,52 +282,6 @@ class proc_julius:
         # 初期設定
         self.proc_step = '1'
 
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
-
-        portId  = str(5500 + int(self.id))
-
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
-
         # 待機ループ
         self.proc_step = '5'
 
@@ -262,96 +307,41 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
 
-            # 処理
-            if (inp_name.lower() == 'filename'):
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
+                out_name  = inp_name
+                out_value = '_ready_'
+                cn_s.put([out_name, out_value])
+
+            # ビジー設定
+            #if (qFunc.statusCheck(self.fileBsy) == False):
+            #    qFunc.statusSet(self.fileBsy, True)
+
+            if int(time.time() - self.proc_last) >= self.beatSec:
+
+                # 実行カウンタ
                 self.proc_last = time.time()
                 self.proc_seq += 1
                 if (self.proc_seq > 9999):
                     self.proc_seq = 1
+                seq4 = '{:04}'.format(self.proc_seq)
+                seq2 = '{:02}'.format(self.proc_seq)
 
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
-                # ビジー設定
-                if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
-
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
-
-                # julius 待機
-                jultxt  = ''
-
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
-                    else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
-
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
-
-                # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
-                cn_s.put([out_name, out_value])
-
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
-                else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
-
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
+                # 処理                
+                self.sub_proc(seq4, )
 
             # ビジー解除
-            qFunc.statusSet(self.fileBsy, False)
+            #qFunc.statusSet(self.fileBsy, False)
 
             # アイドリング
             slow = False
-            if (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
                 slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
+            if  (qFunc.statusCheck(qBusy_dev_scn) == True):
                 slow = True
 
             if (slow == True):
@@ -360,19 +350,16 @@ class proc_julius:
                 if (cn_r.qsize() == 0):
                     time.sleep(0.25)
                 else:
-                    time.sleep(0.05)
+                    time.sleep(0.50)
 
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
+            # レディ解除
+            qFunc.statusSet(self.fileRdy, False)
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
-            qFunc.statusSet(self.fileRdy, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -389,6 +376,91 @@ class proc_julius:
 
 
 
+    def sub_proc(self, seq4, ):
+        #print(seq4)
+        self.check()
+
+    def moveTo(self, x, y):
+        if (self.mouseEnable.lower() == 'yes'):
+            try:
+                pyautogui.moveTo(int(x), int(y))
+            except Exception as e:
+                pass
+        if (self.mousePointer.lower() == 'yes'):
+            try:
+                pyautogui.press("ctrl")
+            except Exception as e:
+                pass
+        try:
+            (x, y) = pyautogui.position()
+            self.last_x = x
+            self.last_y = y
+            qLog.log('info', self.proc_id, 'Position = (' + str(self.last_x) + ', ' + str(self.last_y) + ')', display=self.logDisp, )
+        except Exception as e:
+            pass
+
+    def check(self, ):
+        nowTime = datetime.datetime.now()
+        nowHHMMSS = nowTime.strftime('%H:%M:%S')
+        nowYOUBI  = nowTime.strftime('%a')
+        if (nowHHMMSS < self.dayStart) \
+        or (nowHHMMSS > self.dayEnd):
+            # ビジー解除
+            if (qFunc.statusCheck(self.fileBsy) == True):
+                qFunc.statusSet(self.fileBsy, False)
+                qLog.log('info', self.proc_id, 'mouse pointer stop (day time)', display=self.logDisp, )
+            return
+        if  (nowHHMMSS > self.lunchStart) \
+        and (nowHHMMSS < self.lunchEnd):
+            # ビジー解除
+            if (qFunc.statusCheck(self.fileBsy) == True):
+                qFunc.statusSet(self.fileBsy, False)
+                qLog.log('info', self.proc_id, 'mouse pointer stop (lunch time)', display=self.logDisp, )
+            return
+        if  (nowYOUBI == 'Sat') \
+        or  (nowYOUBI == 'Sun') \
+        or  (nowYOUBI == '土') \
+        or  (nowYOUBI == '日'):
+            # ビジー解除
+            if (qFunc.statusCheck(self.fileBsy) == True):
+                qFunc.statusSet(self.fileBsy, False)
+                qLog.log('info', self.proc_id, 'mouse pointer stop (YOUBI=' & nowYOUBI & ')', display=self.logDisp, )
+            return
+
+        (x, y) = pyautogui.position()
+        if (x != self.last_x) or (y != self.last_y):
+            # ビジー解除
+            if (qFunc.statusCheck(self.fileBsy) == True):
+                qFunc.statusSet(self.fileBsy, False)
+                qLog.log('info', self.proc_id, 'mouse pointer stop', display=self.logDisp, )
+
+            self.last_x = x
+            self.last_y = y
+            self.last_t = time.time()
+
+        if ((time.time() - self.last_t) > self.waitSec):
+
+            # ビジー設定
+            if (qFunc.statusCheck(self.fileBsy) == False):
+                qFunc.statusSet(self.fileBsy, True)
+                qLog.log('info', self.proc_id, 'mouse pointer start', display=self.logDisp, )
+
+            # マウス移動
+            x += int(random.random() * 10) - 5
+            if (x < 100):
+                x = 100
+            if (x > (self.sc_width-100)):
+                x = (self.sc_width-100)
+            y += int(random.random() * 10) - 5
+            if (y < 100):
+                y = 100
+            if (y > (self.sc_height-100)):
+                y = (self.sc_height-100)
+
+            self.moveTo(x, y)
+
+
+
 if __name__ == '__main__':
 
     # 共通クラス
@@ -400,28 +472,47 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # テスト
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    # 設定
+    pointer_thread = proc_pointer('pointer', '0', )
+    pointer_thread.begin()
 
 
 
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
-    time.sleep(3.00)
+    # ループ（スクリプト実行）
+    if (qRUNATTR == 'python'):
+        chktime = time.time()
+        while ((time.time() - chktime) < 60):
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+            res_data  = pointer_thread.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            if (res_name != ''):
+                print(res_name, res_value, )
+
+            if (pointer_thread.proc_s.qsize() == 0):
+                pointer_thread.put(['_status_', ''])
+
+            time.sleep(1.00)
+
+
+
+    # 無限ループ（ｅｘｅ実行）
+    if (qRUNATTR != 'python'):
+
+        while True:
+            res_data  = pointer_thread.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            if (res_name != ''):
+                print(res_name, res_value, )
+
+            time.sleep(1.00)
+
+
 
     time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
-
-
-
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    pointer_thread.abort()
+    del pointer_thread
 
 
 

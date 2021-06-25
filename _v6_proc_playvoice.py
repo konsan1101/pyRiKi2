@@ -23,6 +23,11 @@ import subprocess
 
 
 
+# インターフェース
+qCtrl_control_speech     = 'temp/control_speech.txt'
+
+
+
 # 共通ルーチン
 import  _v6__qRiKi
 qRiKi = _v6__qRiKi.qRiKi_class()
@@ -104,17 +109,25 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+class proc_playvoice:
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug', 
+        micDev='0', micType='bluetooth', micGuide='on', micLevel='777', ):
+
+        self.path      = qPath_s_play
+
         self.runMode   = runMode
+        self.micDev    = micDev
+        self.micType   = micType
+        self.micGuide  = micGuide
+        self.micLevel  = micLevel
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -191,52 +204,6 @@ class proc_julius:
         # 初期設定
         self.proc_step = '1'
 
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
-
-        portId  = str(5500 + int(self.id))
-
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
-
         # 待機ループ
         self.proc_step = '5'
 
@@ -262,96 +229,166 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
 
-            # 処理
-            if (inp_name.lower() == 'filename'):
-                self.proc_last = time.time()
-                self.proc_seq += 1
-                if (self.proc_seq > 9999):
-                    self.proc_seq = 1
-
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
-                # ビジー設定
-                if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
-
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
-
-                # julius 待機
-                jultxt  = ''
-
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
-                    else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
-
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
-
-                # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
+                out_name  = inp_name
+                out_value = '_ready_'
                 cn_s.put([out_name, out_value])
 
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
-                else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
 
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
+
+            # 処理
+            path = self.path
+            path_files = glob.glob(path + '*')
+            path_files.sort()
+            #if (len(path_files) > 0):
+            # フォルダ読み直しループ
+            while (len(path_files) > 0):
+
+                #try:
+                if (True):
+
+                    # 音声入力中
+                    if (self.micType == 'bluetooth'):
+
+                        if (len(glob.glob(qPath_s_inp + '*')) == 0):
+                            qFunc.statusWait_false(qBusy_s_inp, 3)
+
+                        chktime = time.time()
+                        while (len(glob.glob(qPath_s_inp + '*')) > 0) and ((time.time() - chktime) < 3):
+                            qLog.log('info', self.proc_id, 'voice input waiting !', display=self.logDisp,)
+                            time.sleep(0.50)
+
+                    for f in path_files:
+
+                        # 停止要求確認
+                        if (self.breakFlag.is_set()):
+                            self.breakFlag.clear()
+                            self.proc_step = '9'
+                            break
+
+                        proc_file = f.replace('\\', '/')
+
+                        if (proc_file[-4:].lower() == '.wav' and proc_file[-8:].lower() != '.wrk.wav'):
+                            f1 = proc_file
+                            f2 = proc_file[:-4] + '.wrk.wav'
+                            try:
+                                os.rename(f1, f2)
+                                proc_file = f2
+                            except Exception as e:
+                                pass
+                        if (proc_file[-4:].lower() == '.mp3' and proc_file[-8:].lower() != '.wrk.mp3'):
+                            f1 = proc_file
+                            f2 = proc_file[:-4] + '.wrk.mp3'
+                            try:
+                                os.rename(f1, f2)
+                                proc_file = f2
+                            except Exception as e:
+                                pass
+
+                        if (proc_file[-8:].lower() == '.wrk.wav' or proc_file[-8:].lower() == '.wrk.mp3'):
+                            f1 = proc_file
+                            f2 = proc_file[:-8] + proc_file[-4:]
+                            try:
+                                os.rename(f1, f2)
+                                proc_file = f2
+                            except Exception as e:
+                                pass
+
+                            # 実行カウンタ
+                            self.proc_last = time.time()
+                            self.proc_seq += 1
+                            if (self.proc_seq > 9999):
+                                self.proc_seq = 1
+                            seq4 = '{:04}'.format(self.proc_seq)
+                            seq2 = '{:02}'.format(self.proc_seq)
+
+                            proc_name = proc_file.replace(path, '')
+                            proc_name = proc_name[:-4]
+
+                            work_name = self.proc_id + '.' + seq2
+                            work_file = qPath_work + work_name + '.mp3'
+                            if (os.path.exists(work_file)):
+                                os.remove(work_file)
+
+                            sox = subprocess.Popen(['sox', '-q', proc_file, '-r', '16000', '-b', '16', '-c', '1', work_file, ], \
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+                            sox.wait()
+                            sox.terminate()
+                            sox = None
+
+                            if (os.path.exists(work_file)):
+
+                                if (self.micDev.isdigit()):
+                                    os.remove(proc_file)
+
+                                # ログ
+                                if (self.runMode == 'debug') or (not self.micDev.isdigit()):
+                                    qLog.log('info', self.proc_id, '' + proc_name + u' → ' + work_name, display=self.logDisp,)
+
+                                # 結果出力
+                                if (cn_s.qsize() < 99):
+                                    out_name  = 'filename'
+                                    out_value = work_file
+                                    cn_s.put([out_name, out_value])
+
+                                # ビジー設定
+                                if (qFunc.statusCheck(self.fileBsy) == False):
+                                    qFunc.statusSet(self.fileBsy, True)
+                                    if (str(self.id) == '0'):
+                                        qFunc.statusSet(qBusy_s_play, True)
+
+                                    if (self.micType == 'bluetooth') \
+                                    or (self.micGuide == 'on' or self.micGuide == 'sound'):
+                                        qFunc.statusWait_false(qBusy_s_inp, 3)
+
+                                # 音声再生
+                                if (qFunc.statusCheck(qBusy_dev_spk) == True):
+                                    qLog.log('info', 'spk_busy!_:' + work_name, )
+                                else:
+                                    
+                                    sox=subprocess.Popen(['sox', '-q', work_file, '-d', '--norm', ], \
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+                                    #if (self.runMode == 'debug') \
+                                    #or (self.runMode == 'hud') \
+                                    #or (self.runMode == 'live') \
+                                    #or (self.runMode == 'translator'):
+                                    if (self.runMode != 'speech'):
+                                        sox.wait()
+                                        sox.terminate()
+                                        sox = None
+
+                                time.sleep(0.50)
+                                break #１つ再生したらフォルダ読み直し
+
+                #except Exception as e:
+                #    pass
+
+                # フォルダ読み直し
+                path_files = glob.glob(path + '*')
+                path_files.sort()
+
+
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
+            if (str(self.id) == '0'):
+                qFunc.statusSet(qBusy_s_play, False)
+
+            # バッチ実行時は終了
+            if (not self.micDev.isdigit()):
+                break
 
             # アイドリング
             slow = False
-            if (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
                 slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
+            if  (qFunc.statusCheck(qBusy_dev_spk) == True):
                 slow = True
 
             if (slow == True):
@@ -365,14 +402,13 @@ class proc_julius:
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
+            # レディ解除
+            qFunc.statusSet(self.fileRdy, False)
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
-            qFunc.statusSet(self.fileRdy, False)
+            if (str(self.id) == '0'):
+                qFunc.statusSet(qBusy_s_play, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -400,28 +436,73 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # テスト
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    # 初期設定
+    qFunc.remove(qCtrl_control_speech)
+    qRiKi.statusReset_speech(False)
+
+    # パラメータ
+    runMode = 'debug'
+    if (len(sys.argv) >= 2):
+        runMode  = str(sys.argv[1]).lower()
+
+    # 開始
+    playvoice_thread = proc_playvoice('playvoice', '0', runMode, )
+    playvoice_thread.begin()
 
 
 
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
-    time.sleep(3.00)
+    # テスト実行
+    if (len(sys.argv) < 2):
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+        qFunc.copy('_sounds/_sound_hallo.wav', qPath_s_play + '_sound_hallo.wav')
 
-    time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
+        chktime = time.time()
+        while ((time.time() - chktime) < 15):
+
+            res_data  = playvoice_thread.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            if (res_name != ''):
+                print(res_name, res_value, )
+
+            if (playvoice_thread.proc_s.qsize() == 0):
+                playvoice_thread.put(['_status_', ''])
+
+            time.sleep(0.05)
 
 
 
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    # 単体実行
+    if (len(sys.argv) >= 2):
+
+        # 待機ループ
+        while (True):
+
+            # 終了確認
+            control = ''
+            txts, txt = qFunc.txtsRead(qCtrl_control_speech)
+            if (txts != False):
+                qLog.log('info', str(txt))
+                if (txt == '_end_'):
+                    break
+                else:
+                    qFunc.remove(qCtrl_control_speech)
+                    control = txt
+
+            # メッセージ
+            res_data  = playvoice_thread.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            #if (res_name != ''):
+            #    print(res_name, res_value, )
+
+            time.sleep(0.50)
+
+
+
+    # 終了
+    playvoice_thread.abort()
+    del playvoice_thread
 
 
 

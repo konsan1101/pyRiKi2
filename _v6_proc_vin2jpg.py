@@ -104,17 +104,22 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_julius:
+class proc_vin2jpg:
 
-    def __init__(self, name='thread', id='00', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug', 
+        camDev='0', ):
+
+        self.path      = qPath_v_inp
+
         self.runMode   = runMode
+        self.camDev    = camDev
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
         self.name      = name
         self.id        = id
         self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-3] + '_{:02}'.format(int(id))
+        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
@@ -165,7 +170,7 @@ class proc_julius:
             time.sleep(0.25)
 
     def put(self, data, ):
-        self.proc_s.put(data)
+        self.proc_s.put(data)        
         return True
 
     def checkGet(self, waitMax=5, ):
@@ -177,8 +182,8 @@ class proc_julius:
 
     def get(self, ):
         if (self.proc_r.qsize() == 0):
-            return ['', '']
-        data = self.proc_r.get()
+            return ['', '']        
+        data = self.proc_r.get()        
         self.proc_r.task_done()
         return data
 
@@ -190,52 +195,6 @@ class proc_julius:
 
         # 初期設定
         self.proc_step = '1'
-
-        fileLog = qPath_work + self.proc_id + '.log'
-        qFunc.remove(fileLog)
-
-        portId  = str(5500 + int(self.id))
-
-        # julius 起動
-        if (self.runMode == 'number'):
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn999.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        else:
-            if (os.name == 'nt'):
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-charconv', 'utf-8', 'sjis', '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-            else:
-                julius = subprocess.Popen(['julius', '-input', 'adinnet', '-adport', portId, \
-                                        '-C', 'julius/_jconf_20180313dnn.jconf', '-dnnconf', 'julius/julius.dnnconf', \
-                                        '-logfile', fileLog, '-quiet', ], \
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, )
-        time.sleep(0.50)
-
-        # julius 待機
-        chktime = time.time()
-        chkhit  = ''
-        while ((time.time() - chktime) < 5):
-            t = julius.stdout.readline()
-            t = t.replace('\r', '')
-            t = t.replace('\n', '')
-            #print('julius:' + str(t))
-            if t != '':
-                chkhit = t
-            else:
-                if chkhit != '':
-                    break
-            time.sleep(0.01)
-            chktime = time.time()
 
         # 待機ループ
         self.proc_step = '5'
@@ -262,96 +221,109 @@ class proc_julius:
             if (cn_r.qsize() > 1) or (cn_s.qsize() > 20):
                 qLog.log('warning', self.proc_id, 'queue overflow warning!, ' + str(cn_r.qsize()) + ', ' + str(cn_s.qsize()))
 
-            # レディー設定
+            # レディ設定
             if (qFunc.statusCheck(self.fileRdy) == False):
                 qFunc.statusSet(self.fileRdy, True)
-                qLog.log('info', self.proc_id, 'ready', display=self.logDisp,)
 
-            # 処理
-            if (inp_name.lower() == 'filename'):
-                self.proc_last = time.time()
-                self.proc_seq += 1
-                if (self.proc_seq > 9999):
-                    self.proc_seq = 1
-
-                # ログ
-                # qLog.log('info', self.proc_id, '' + str(inp_name) + ' , ' + str(inp_value), display=self.logDisp, )
-
-                # ビジー設定
-                if (qFunc.statusCheck(self.fileBsy) == False):
-                    qFunc.txtsWrite(self.fileBsy, txts=[inp_value], encoding='utf-8', exclusive=False, mode='a', )
-
-                # lst ファイル用意
-                fileLst = qPath_work + self.proc_id + '.{:04}'.format(self.proc_seq) + '.lst'
-                qFunc.txtsWrite(fileLst, txts=[inp_value], encoding='utf-8', exclusive=False, mode='w', )
-                
-                # adintool 起動
-                adintool = subprocess.Popen(['adintool', '-input', 'file', '-filelist', fileLst, \
-                                            '-out', 'adinnet', '-server', 'localhost', '-port', portId, '-nosegment',], \
-                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, )
-                adintool.wait()
-                adintool.terminate()
-                qFunc.remove(fileLst)
-
-                # julius 待機
-                jultxt  = ''
-
-                chktime = time.time()
-                chkhit  = ''
-                while ((time.time() - chktime) < 5):
-                    t = julius.stdout.readline()
-                    t = t.replace('\r', '')
-                    t = t.replace('\n', '')
-                    #print('julius:' + str(t))
-                    if t != '':
-                        chkhit = t
-                        if t[:15]=='<search failed>':
-                            jultxt = ' '
-                        if t[:10]=='sentence1:':
-                            jultxt = t[10:]
-                    else:
-                        if chkhit != '':
-                            break
-                    time.sleep(0.01)
-                    chktime = time.time()
-
-                    jultxt = jultxt.strip()
-                    jultxt = jultxt.replace(u'　', '')
-                    jultxt = jultxt.replace(u'。', '')
-                    jultxt = jultxt.replace(' ', '')
-
-                # 結果出力
-                if (jultxt == ''):
-                    jultxt = '!'
-                out_name  = '[txts]'
-                out_value = [jultxt]
+            # ステータス応答
+            if (inp_name.lower() == '_status_'):
+                out_name  = inp_name
+                out_value = '_ready_'
                 cn_s.put([out_name, out_value])
 
-                if (self.runMode=='debug'):
-                    qLog.log('info', self.proc_id, '' + str(out_name) + ', ' + str(out_value), display=self.logDisp, )
-                else:
-                    #qLog.log('info', ' ' + self.proc_id + ':Recognize /' + str(out_value) + '/ ja (julius) pass!', display=True, )
-                    pass
 
-                # txt ファイル出力
-                fileTxt = inp_value[:-4] + '.txt'
-                fileTxt = fileTxt.replace(qPath_work, '')
-                fileTxt = fileTxt.replace(qPath_rec,  '')
-                fileTxt = fileTxt.replace(qPath_s_wav,  '')
-                fileTxt = fileTxt.replace(qPath_s_jul,  '')
-                fileTxt = qPath_s_jul + fileTxt
-                qFunc.txtsWrite(fileTxt, txts=[jultxt], encoding='utf-8', exclusive=True, mode='w', )
+
+            # 処理
+            path = self.path
+            path_files = glob.glob(path + '*')
+            path_files.sort()
+            if (len(path_files) > 0):
+
+                #try:
+                if (True):
+
+                    for f in path_files:
+
+                        # 停止要求確認
+                        if (self.breakFlag.is_set()):
+                            self.breakFlag.clear()
+                            self.proc_step = '9'
+                            break
+
+                        proc_file = f.replace('\\', '/')
+
+                        if (proc_file[-4:].lower() == '.jpg' and proc_file[-8:].lower() != '.wrk.jpg'):
+                            f1 = proc_file
+                            f2 = proc_file[:-4] + '.wrk.jpg'
+                            try:
+                                os.rename(f1, f2)
+                                proc_file = f2
+                            except Exception as e:
+                                pass
+
+                        if (proc_file[-8:].lower() == '.wrk.jpg'):
+                            f1 = proc_file
+                            f2 = proc_file[:-8] + proc_file[-4:]
+                            try:
+                                os.rename(f1, f2)
+                                proc_file = f2
+                            except Exception as e:
+                                pass
+
+                            # 実行カウンタ
+                            self.proc_last = time.time()
+                            self.proc_seq += 1
+                            if (self.proc_seq > 9999):
+                                self.proc_seq = 1
+                            seq4 = '{:04}'.format(self.proc_seq)
+                            seq2 = '{:02}'.format(self.proc_seq)
+
+                            proc_name = proc_file.replace(path, '')
+                            proc_name = proc_name[:-4]
+
+                            work_name = self.proc_id + '.' + seq2
+                            work_file = qPath_work + work_name + '.jpg'
+                            if (os.path.exists(work_file)):
+                                os.remove(work_file)
+
+                            qFunc.copy(proc_file, work_file, )
+
+                            if (os.path.exists(work_file)):
+
+                                if (self.camDev.isdigit()):
+                                    os.remove(proc_file)
+
+                                # ログ
+                                if (self.runMode == 'debug') or (not self.camDev.isdigit()):
+                                    qLog.log('info', self.proc_id, '' + proc_name + u' → ' + work_name, display=self.logDisp,)
+
+                                # ビジー設定
+                                if (qFunc.statusCheck(self.fileBsy) == False):
+                                    qFunc.statusSet(self.fileBsy, True)
+                                    if (str(self.id) == '0'):
+                                        qFunc.statusSet(qBusy_v_jpg, True)
+
+                                # ＡＩ処理
+                                self.proc_last = time.time()
+                                self.sub_proc(seq4, proc_file, work_file, cn_s, )
+
+                                time.sleep(0.50)
+
+                #except Exception as e:
+                #    pass
+
+
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
+            if (str(self.id) == '0'):
+                qFunc.statusSet(qBusy_v_jpg, False)
 
             # アイドリング
             slow = False
-            if (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
                 slow = True
-            elif (qFunc.statusCheck(qBusy_dev_mic) == True) \
-            and  (qFunc.statusCheck(qRdy__s_force)   == False) \
-            and  (qFunc.statusCheck(qRdy__s_sendkey) == False):
+            if  (qFunc.statusCheck(qBusy_dev_cam) == True):
                 slow = True
 
             if (slow == True):
@@ -365,14 +337,13 @@ class proc_julius:
         # 終了処理
         if (True):
 
-            # julius 終了
-            julius.terminate()
+            # レディ解除
+            qFunc.statusSet(self.fileRdy, False)
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-
-            # レディー解除
-            qFunc.statusSet(self.fileRdy, False)
+            if (str(self.id) == '0'):
+                qFunc.statusSet(qBusy_v_jpg, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -389,6 +360,24 @@ class proc_julius:
 
 
 
+    def sub_proc(self, seq4, proc_file, work_file, cn_s, ):
+
+        # 結果出力
+        if (cn_s.qsize() < 99):
+            out_name  = 'filename'
+            out_value = work_file
+            cn_s.put([out_name, out_value])
+
+        # コピー
+        filename = proc_file
+        filename = filename.replace(qPath_v_inp, '')
+        filename = filename.replace(qPath_v_jpg, '')
+        filename = filename.replace(qPath_work,  '')
+        filename = qPath_v_jpg + filename
+        qFunc.copy(work_file, filename, )
+
+
+
 if __name__ == '__main__':
 
     # 共通クラス
@@ -400,28 +389,35 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # テスト
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    # 設定
+    vin2jpg_thread = proc_vin2jpg('vin2jpg', '0', )
+    vin2jpg_thread.begin()
+
+    qFunc.copy('_photos/_photo_qrcode.jpg', qPath_v_inp + '_photo_qrcode.jpg')
+    qFunc.copy('_photos/_photo_ocr_meter.jpg', qPath_v_inp + '_photo_ocr_meter.jpg')
 
 
 
-    julius_thread = proc_julius('julius', '00', )
-    julius_thread.begin()
-    time.sleep(3.00)
+    # ループ
+    chktime = time.time()
+    while ((time.time() - chktime) < 15):
 
-    for _ in range(3):
-        julius_thread.put(['filename', '_sounds/_sound_hallo.wav'])
-        res_data  = julius_thread.checkGet()
+        res_data  = vin2jpg_thread.get()
+        res_name  = res_data[0]
+        res_value = res_data[1]
+        if (res_name != ''):
+            print(res_name, res_value, )
+
+        if (vin2jpg_thread.proc_s.qsize() == 0):
+            vin2jpg_thread.put(['_status_', ''])
+
+        time.sleep(0.05)
+
+
 
     time.sleep(1.00)
-    julius_thread.abort()
-    del julius_thread
-
-
-
-    qFunc.kill('julius')
-    qFunc.kill('adintool')
+    vin2jpg_thread.abort()
+    del vin2jpg_thread
 
 
 
