@@ -9,8 +9,9 @@ REM ------------------------------------------------
 cd ".."
 
 ECHO;
-IF EXIST "build" RD "build" /s /q
-IF EXIST "dist"  RD "dist"  /s /q
+IF EXIST "build"        RD "build"        /s /q
+IF EXIST "dist"         RD "dist"         /s /q
+IF EXIST "__pycache__"  RD "__pycache__"  /s /q
 PAUSE
 
 
@@ -49,8 +50,9 @@ IF EXIST "dist\%pyname%.exe"  ECHO "%pyname%.exe"
     del  "%pyname%.exe"
 
 ECHO;
-IF EXIST "build" RD "build" /s /q
-IF EXIST "dist"  RD "dist"  /s /q
+IF EXIST "build"        RD "build"        /s /q
+IF EXIST "dist"         RD "dist"         /s /q
+IF EXIST "__pycache__"  RD "__pycache__"  /s /q
 PAUSE
 
 
