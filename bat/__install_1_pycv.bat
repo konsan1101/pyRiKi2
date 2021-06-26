@@ -16,10 +16,10 @@ ECHO Python==3.7.9
 ECHO setuptools==50.3.2
 ECHO pyinstaller==4.1
 ECHO numpy==1.19.0
-ECHO matplotlib==3.0.3
 ECHO psutil==5.7.3
-ECHO mojimoji==0.0.11
 ECHO websocket-client==0.48.0
+ECHO matplotlib==3.0.3
+ECHO mojimoji==0.0.11
 
 ECHO;
 ECHO ----------
@@ -29,10 +29,23 @@ ECHO Python==3.8.9
 ECHO setuptools==56.0.0
 ECHO pyinstaller==4.3
 ECHO numpy==1.20.2
-ECHO matplotlib==3.2.2
 ECHO psutil==5.8.0
-ECHO mojimoji==0.0.11
 ECHO websocket-client==0.48.0
+ECHO matplotlib==3.2.2
+ECHO mojimoji==0.0.11
+
+ECHO;
+ECHO ----------
+ECHO 2021/06/26
+ECHO ----------
+ECHO Python==3.9.4
+ECHO setuptools==57.0.0
+ECHO pyinstaller==4.3
+ECHO numpy==1.21.0
+ECHO psutil==5.8.0
+ECHO websocket-client==0.48.0
+ECHO matplotlib==3.4.2
+ECHO mojimoji==0.0.11
 
 ECHO;
 ECHO -----
