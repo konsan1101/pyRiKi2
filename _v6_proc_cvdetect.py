@@ -360,7 +360,7 @@ class proc_cvdetect:
                                                     # 外部プログラム
                                                     if ((time.time() - last_face) > 0):
                                                         last_face = time.time()
-                                                        snd = 'none'
+                                                        snd = '_null'
                                                         if ((time.time() - last_pingpong) > 60):
                                                             last_pingpong = time.time()
                                                             snd = '_pingpong'

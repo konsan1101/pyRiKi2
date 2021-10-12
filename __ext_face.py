@@ -65,7 +65,8 @@ if __name__ == '__main__':
     # パラメータ
     imgPath = '_icons/'
     imgFile = 'detect_face.png'
-    snd     = '_pingpong'
+    #snd     = '_pingpong'
+    snd     = '_null'
 
     if (len(sys.argv) >= 2):
         imgPath = str(sys.argv[1])
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     qGuide.setMessage(txt='detect', )
 
     # ピンポン再生
-    if (snd != 'none'):
+    if (snd != 'none') and (snd != '_null'):
         guideSound(filename=snd, sync=False)
 
     # 待機
