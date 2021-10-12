@@ -18,12 +18,45 @@ import codecs
 import glob
 
 import cv2
-
+import subprocess
 
 
 # 共通ルーチン
 import  _v6__qGuide
 qGuide= _v6__qGuide.qGuide_class()
+
+qPath_sounds = '_sounds/'
+def guideSound(filename=None, sync=True):
+        playfile = filename
+        if (filename == '_up'):
+            playfile = qPath_sounds + '_sound_up.mp3'
+        if (filename == '_ready'):
+            playfile = qPath_sounds + '_sound_ready.mp3'
+        if (filename == '_accept'):
+            playfile = qPath_sounds + '_sound_accept.mp3'
+        if (filename == '_ok'):
+            playfile = qPath_sounds + '_sound_ok.mp3'
+        if (filename == '_ng'):
+            playfile = qPath_sounds + '_sound_ng.mp3'
+        if (filename == '_down'):
+            playfile = qPath_sounds + '_sound_down.mp3'
+        if (filename == '_shutter'):
+            playfile = qPath_sounds + '_sound_shutter.mp3'
+        if (filename == '_pingpong'):
+            playfile = qPath_sounds + '_sound_pingpong.mp3'
+
+        if (os.path.exists(playfile)):
+
+            sox=subprocess.Popen(['sox', '-q', playfile, '-d', ], \
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+            if (sync == True):
+                sox.wait()
+                sox.terminate()
+                sox = None
+
+            return True
+
+        return False
 
 
 
@@ -32,6 +65,7 @@ if __name__ == '__main__':
     # パラメータ
     imgPath = '_icons/'
     imgFile = 'detect_face.png'
+    snd     = '_pingpong'
 
     if (len(sys.argv) >= 2):
         imgPath = str(sys.argv[1])
@@ -39,6 +73,8 @@ if __name__ == '__main__':
             imgPath += '/'
     if (len(sys.argv) >= 3):
         imgFile  = str(sys.argv[2])
+    if (len(sys.argv) >= 4):
+        snd      = str(sys.argv[3])
 
     # 画像表示
     imgFile = imgPath + imgFile
@@ -50,9 +86,13 @@ if __name__ == '__main__':
     time.sleep(0.25)
     qGuide.setMessage(txt='detect', )
 
+    # ピンポン再生
+    if (snd != 'none'):
+        guideSound(filename=snd, sync=False)
+
     # 待機
     chkTime = time.time()
-    while ((time.time() - chkTime) < 3):
+    while ((time.time() - chkTime) < 5):
         event, values = qGuide.read()
         if event in (None, 'Exit'):
             break

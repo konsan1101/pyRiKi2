@@ -28,7 +28,6 @@ import cv2
 
 # 外部プログラム
 qExt_face                = '__ext_face.bat'
-qExt_pingpong            = '__ext_pingpong.bat'
 
 
 
@@ -225,8 +224,8 @@ class proc_cvdetect:
         # 初期設定
         self.proc_step = '1'
 
-        last_face      = time.time()
-        last_pingpong  = time.time()
+        last_face      = time.time() - 60
+        last_pingpong  = time.time() - 60
 
         # 待機ループ
         self.proc_step = '5'
@@ -358,20 +357,15 @@ class proc_cvdetect:
                                             or (self.runMode == 'reception'):
                                                 if (os.name == 'nt'):
 
-                                                    # 外部プログラム(1)
+                                                    # 外部プログラム
                                                     if ((time.time() - last_face) > 0):
                                                         last_face = time.time()
+                                                        snd = 'none'
+                                                        if ((time.time() - last_pingpong) > 60):
+                                                            last_pingpong = time.time()
+                                                            snd = '_pingpong'
                                                         if (os.path.exists(qExt_face)):
-                                                            qLog.log('info', self.proc_id, qExt_face, display=True, )
-                                                            ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, ], )
-                                                                    #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
-
-                                                    # 外部プログラム(2)
-                                                    if ((time.time() - last_pingpong) > 60):
-                                                        last_pingpong = time.time()
-                                                        if (os.path.exists(qExt_pingpong)):
-                                                            qLog.log('info', self.proc_id, qExt_pingpong, display=True, )
-                                                            ext_pingpong = subprocess.Popen([qExt_pingpong, qPath_rec, fn0, ], )
+                                                            ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, snd, ], )
                                                                     #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
                                     except Exception as e:
