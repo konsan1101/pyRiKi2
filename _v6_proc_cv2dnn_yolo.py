@@ -204,6 +204,9 @@ class proc_cv2dnn_yolo:
         # 初期設定
         self.proc_step = '1'
 
+        last_face      = time.time()
+        last_pingpong  = time.time()
+
         # 定義ファイル
         file_config  = 'cv2dnn/yolov3/yolov3-tiny.cfg'
         file_weights = 'cv2dnn/yolov3/yolov3-tiny.weights'
@@ -430,13 +433,20 @@ class proc_cv2dnn_yolo:
                                         cv2.imwrite(fn1, hit_img)
                                         cv2.imwrite(fn2, hit_img)
 
-                                        # 外部プログラム
                                         if (self.runMode == 'debug') \
                                         or (self.runMode == 'reception'):
                                             if (os.name == 'nt'):
-                                                if (os.path.exists(qExt_face)):
-                                                    ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, ], )
-                                                            #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+                                                    # 外部プログラム
+                                                    if ((time.time() - last_face) > 0):
+                                                        last_face = time.time()
+                                                        snd = '_null'
+                                                        if ((time.time() - last_pingpong) > 60):
+                                                            last_pingpong = time.time()
+                                                            snd = '_pingpong'
+                                                        if (os.path.exists(qExt_face)):
+                                                            ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, snd, ], )
+                                                                    #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
                                     except Exception as e:
                                         pass
