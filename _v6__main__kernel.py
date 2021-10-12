@@ -814,8 +814,8 @@ if __name__ == '__main__':
         qLog.log('info', main_id, 'qLangTxt =' + str(qLangTxt ))
         qLog.log('info', main_id, 'qLangOut =' + str(qLangOut ))
 
-        qLog.log('info', main_id, 'cam1Dev   =' + str(cam1Dev ))
-        qLog.log('info', main_id, 'cam2Dev   =' + str(cam2Dev ))
+        qLog.log('info', main_id, 'cam1Dev  =' + str(cam1Dev  ))
+        qLog.log('info', main_id, 'cam2Dev  =' + str(cam2Dev  ))
 
     # 初期設定
 

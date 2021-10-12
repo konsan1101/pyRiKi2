@@ -1498,15 +1498,15 @@ if __name__ == '__main__':
 
     # 最終カメラ番号
 
+    camDev_max = 'none'
     if (os.name == 'nt') or (qPLATFORM == 'darwin'):
         cam, mic = qFFmpeg.ffmpeg_list_dev()
         if (len(cam) > 0):
             #print(cam)
             #print(mic)
             camDev_max = str(len(cam)-1)
-        else:
-            camDev_max = 'none'
-    else:
+
+    if (camDev_max == 'none'):
         camDev_max = '9'
         chk = False
         while (chk == False) and (camDev_max >= '0'):
@@ -1590,7 +1590,8 @@ if __name__ == '__main__':
                 autoShot = '60'
 
         if (len(sys.argv) >= 3):
-            cam1Dev  = str(sys.argv[2])
+            if (str(sys.argv[2]).lower() != 'auto'):
+                cam1Dev  = str(sys.argv[2])
         if (len(sys.argv) >= 4):
             val = str(sys.argv[3]).lower()
             if (val != 'default') and (val != 'auto'):
@@ -1602,7 +1603,8 @@ if __name__ == '__main__':
         if (len(sys.argv) >= 7):
             cam1Zoom = str(sys.argv[6]).lower()
         if (len(sys.argv) >= 8):
-            cam2Dev  = str(sys.argv[7])
+            if (str(sys.argv[7]).lower() != 'auto'):
+                cam2Dev  = str(sys.argv[7])
         if (len(sys.argv) >= 9):
             val = str(sys.argv[8]).lower()
             if (val != 'default') and (val != 'auto'):

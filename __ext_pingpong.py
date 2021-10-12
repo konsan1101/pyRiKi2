@@ -17,29 +17,49 @@ import datetime
 import codecs
 import glob
 
+import subprocess
 
 
-# 共通ルーチン
-import  _v6__qFunc
-qFunc = _v6__qFunc.qFunc_class()
+qPath_sounds = '_sounds/'
+
+def guideSound(filename=None, sync=True):
+        playfile = filename
+        if (filename == '_up'):
+            playfile = qPath_sounds + '_sound_up.mp3'
+        if (filename == '_ready'):
+            playfile = qPath_sounds + '_sound_ready.mp3'
+        if (filename == '_accept'):
+            playfile = qPath_sounds + '_sound_accept.mp3'
+        if (filename == '_ok'):
+            playfile = qPath_sounds + '_sound_ok.mp3'
+        if (filename == '_ng'):
+            playfile = qPath_sounds + '_sound_ng.mp3'
+        if (filename == '_down'):
+            playfile = qPath_sounds + '_sound_down.mp3'
+        if (filename == '_shutter'):
+            playfile = qPath_sounds + '_sound_shutter.mp3'
+        if (filename == '_pingpong'):
+            playfile = qPath_sounds + '_sound_pingpong.mp3'
+
+        if (os.path.exists(playfile)):
+
+            sox=subprocess.Popen(['sox', '-q', playfile, '-d', ], \
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+            if (sync == True):
+                sox.wait()
+                sox.terminate()
+                sox = None
+
+            return True
+
+        return False
 
 
 
 if __name__ == '__main__':
 
-    # パラメータ
-    imgPath = '_icons/'
-    imgFile = 'detect_face.png'
-
-    if (len(sys.argv) >= 2):
-        imgPath = str(sys.argv[1])
-        if (imgPath[:-1] != '/'):
-            imgPath += '/'
-    if (len(sys.argv) >= 3):
-        imgFile  = str(sys.argv[2])
-
-    # 音声再生
-    qFunc.guideSound(filename='_pingpong', sync=True)
+    # ガイド再生
+    guideSound(filename='_pingpong', sync=True)
 
     # メッセージ
     time.sleep(0.50)

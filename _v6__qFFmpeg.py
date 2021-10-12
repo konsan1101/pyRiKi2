@@ -126,6 +126,7 @@ class qFFmpeg_class:
                     break
                 # テキスト
                 txt = line.decode('utf-8')
+                #print(txt)
                 if   (txt.find('DirectShow video devices') >=0):
                     flag = 'cam'
                 elif (txt.find('DirectShow audio devices') >=0):
