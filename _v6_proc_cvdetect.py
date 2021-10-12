@@ -363,7 +363,7 @@ class proc_cvdetect:
                                                                 #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
                                                     # 外部プログラム(2)
-                                                    if ((self.last_pingpong - time.time()) > 60):
+                                                    if ((time.time() - self.last_pingpong) > 60):
                                                         self.last_pingpong = time.time()
                                                         if (os.path.exists(qExt_pingpong)):
                                                             ext_pingpong = subprocess.Popen([qExt_pingpong, qPath_rec, fn0, ], )
