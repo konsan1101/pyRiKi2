@@ -105,10 +105,12 @@ ECHO python _v6__destroy.py faster
      python _v6__destroy.py faster
 
 ECHO;
-rem ---------------------------------------------------------------------------InpTrn
-ECHO python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en
-     python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio%
-rem ---------------------------------------------------------------------------InpTrn
+rem     ---------------------------------------------------------------------------InpTrnOutTxtCam1Cam2
+rem ECHO python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en en ja "http://repair-fujitsu:5555/MotionJpeg?w=1920&h=1080"
+rem      python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en en ja "http://repair-fujitsu:5555/MotionJpeg?w=1920&h=1080"
+    ECHO python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en en ja
+         python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en en ja
+rem     ---------------------------------------------------------------------------InpTrnOutTxtCam
 
 ECHO;
 ECHO python _v6__destroy.py faster

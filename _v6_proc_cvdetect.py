@@ -28,6 +28,7 @@ import cv2
 
 # 外部プログラム
 qExt_face                = '__ext_face.bat'
+qExt_pingpong            = '__ext_pingpong.bat'
 
 
 
@@ -182,6 +183,8 @@ class proc_cvdetect:
         self.proc_last = time.time()
         self.proc_step = '0'
         self.proc_seq  = 0
+
+        self.last_pingpong = time.time()
 
         self.proc_main.setDaemon(True)
         self.proc_main.start()
@@ -350,13 +353,21 @@ class proc_cvdetect:
 
                                         if (self.cas_nm == 'face'):
 
-                                            # 外部プログラム
                                             if (self.runMode == 'debug') \
                                             or (self.runMode == 'reception'):
                                                 if (os.name == 'nt'):
+
+                                                    # 外部プログラム(1)
                                                     if (os.path.exists(qExt_face)):
                                                         ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, ], )
                                                                 #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+                                                    # 外部プログラム(2)
+                                                    if ((self.last_pingpong - time.time()) > 60):
+                                                        self.last_pingpong = time.time()
+                                                        if (os.path.exists(qExt_pingpong)):
+                                                            ext_pingpong = subprocess.Popen([qExt_pingpong, qPath_rec, fn0, ], )
+                                                                    #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
                                     except Exception as e:
                                         pass

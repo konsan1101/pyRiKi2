@@ -7,9 +7,7 @@ REM Thank you for keeping the rules.
 REM ------------------------------------------------
 
 IF EXIST "C:\Python3"   GOTO PY
-IF EXIST "C:\Python37"  GOTO PY
-IF EXIST "C:\Python38"  GOTO PY
-IF EXIST "C:\Python39"  GOTO PY
+IF EXIST "C:\Python4"   GOTO PY
 
 :DOS
 ECHO;Å@%1Å@%2

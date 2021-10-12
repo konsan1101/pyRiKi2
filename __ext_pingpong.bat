@@ -10,11 +10,11 @@ IF EXIST "C:\Python3"   GOTO PY
 IF EXIST "C:\Python4"   GOTO PY
 
 :DOS
-ECHO;　%1　%2　%3
+ECHO;　%1　%2
 GOTO ABORT
 
 :PY
-start /b python __ext_speech.py %1 %2 %3
+start /b python __ext_pingpong.py %1 %2
 
 :ABORT
 rem ping localhost -w 1000 -n 3 >nul

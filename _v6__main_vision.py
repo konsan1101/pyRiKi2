@@ -1729,8 +1729,8 @@ if __name__ == '__main__':
     guide_time = time.time()
 
     main_core = None
-    if (camDev_max == 'none'):
-        qLog.log('critical', main_id, 'no camera! (camDev_max==none)')
+    if (cam1Dev == 'none') and (cam2Dev == 'none'):
+        qLog.log('critical', main_id, 'no camera! (cam1Dev==none and cam2Dev==none)')
     else:
 
         qLog.log('info', main_id, 'start')

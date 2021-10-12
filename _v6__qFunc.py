@@ -572,6 +572,8 @@ class qFunc_class:
             playfile = qPath_sounds + '_sound_down.mp3'
         if (filename == '_shutter'):
             playfile = qPath_sounds + '_sound_shutter.mp3'
+        if (filename == '_pingpong'):
+            playfile = qPath_sounds + '_sound_pingpong.mp3'
 
         if (os.path.exists(playfile)):
 

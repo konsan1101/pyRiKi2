@@ -153,6 +153,8 @@ qLangInp    = 'ja'
 qLangTrn    = 'en'
 qLangTxt    = qLangInp
 qLangOut    = qLangTrn[:2]
+cam1Dev     = 'auto'
+cam2Dev     = 'auto'
 
 
 
@@ -168,6 +170,7 @@ class main_kernel:
                     micDev='0', micType='bluetooth', micGuide='on', micLevel='777',
                     qApiInp='free', qApiTrn='free', qApiOut='free',
                     qLangInp='ja', qLangTrn='en,fr,', qLangTxt='ja', qLangOut='en',
+                    cam1Dev='auto', cam2Dev='auto',
                     ):
         self.runMode   = runMode
         self.micDev    = micDev
@@ -182,6 +185,9 @@ class main_kernel:
         self.qLangTrn  = qLangTrn
         self.qLangTxt  = qLangTxt
         self.qLangOut  = qLangOut
+
+        self.cam1Dev   = cam1Dev
+        self.cam2Dev   = cam2Dev
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
@@ -414,11 +420,11 @@ class main_kernel:
 
                 if (qRUNATTR == 'python'):
                     main_vision_run = subprocess.Popen([python_exe, qPython_main_vision, 
-                                    self.runMode, ], )
+                                    self.runMode, self.cam1Dev, self.cam2Dev, ], )
                                     #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
                 else:
                     main_vision_run = subprocess.Popen([qPython_main_vision[:-3],
-                                    self.runMode, ], )
+                                    self.runMode, self.cam1Dev, self.cam2Dev, ], )
                                     #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
                 time.sleep(2.00)
 
@@ -789,6 +795,10 @@ if __name__ == '__main__':
             qLangTxt = str(sys.argv[11]).lower()
         if (len(sys.argv) >= 13):
             qLangOut = str(sys.argv[12]).lower()
+        if (len(sys.argv) >= 14):
+            cam1Dev = sys.argv[13]
+        if (len(sys.argv) >= 15):
+            cam2Dev = sys.argv[14]
 
         qLog.log('info', main_id, 'runMode  =' + str(runMode  ))
         qLog.log('info', main_id, 'micDev   =' + str(micDev   ))
@@ -803,6 +813,9 @@ if __name__ == '__main__':
         qLog.log('info', main_id, 'qLangTrn =' + str(qLangTrn ))
         qLog.log('info', main_id, 'qLangTxt =' + str(qLangTxt ))
         qLog.log('info', main_id, 'qLangOut =' + str(qLangOut ))
+
+        qLog.log('info', main_id, 'cam1Dev   =' + str(cam1Dev ))
+        qLog.log('info', main_id, 'cam2Dev   =' + str(cam2Dev ))
 
     # 初期設定
 
@@ -861,7 +874,8 @@ if __name__ == '__main__':
                                 runMode=runMode,
                                 micDev=micDev, micType=micType, micGuide=micGuide, micLevel=micLevel,
                                 qApiInp=qApiInp, qApiTrn=qApiTrn, qApiOut=qApiOut,
-                                qLangInp=qLangInp, qLangTrn=qLangTrn, qLangTxt=qLangTxt, qLangOut=qLangOut, )
+                                qLangInp=qLangInp, qLangTrn=qLangTrn, qLangTxt=qLangTxt, qLangOut=qLangOut, 
+                                cam1Dev=cam1Dev, cam2Dev=cam2Dev, )
         main_core.begin()
 
     # 待機ループ
