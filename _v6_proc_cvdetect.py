@@ -224,8 +224,8 @@ class proc_cvdetect:
         # 初期設定
         self.proc_step = '1'
 
-        last_face      = time.time() - 60
-        last_pingpong  = time.time() - 60
+        last_face      = time.time()
+        last_pingpong  = time.time()
 
         # 待機ループ
         self.proc_step = '5'
