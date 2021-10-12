@@ -184,8 +184,6 @@ class proc_cvdetect:
         self.proc_step = '0'
         self.proc_seq  = 0
 
-        self.last_pingpong = time.time()
-
         self.proc_main.setDaemon(True)
         self.proc_main.start()
 
@@ -226,6 +224,9 @@ class proc_cvdetect:
 
         # 初期設定
         self.proc_step = '1'
+
+        last_face      = time.time()
+        last_pingpong  = time.time()
 
         # 待機ループ
         self.proc_step = '5'
@@ -358,14 +359,18 @@ class proc_cvdetect:
                                                 if (os.name == 'nt'):
 
                                                     # 外部プログラム(1)
-                                                    if (os.path.exists(qExt_face)):
-                                                        ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, ], )
-                                                                #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+                                                    if ((time.time() - last_face) > 0):
+                                                        last_face = time.time()
+                                                        if (os.path.exists(qExt_face)):
+                                                            qLog.log('info', self.proc_id, qExt_face, display=True, )
+                                                            ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, ], )
+                                                                    #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
                                                     # 外部プログラム(2)
-                                                    if ((time.time() - self.last_pingpong) > 60):
-                                                        self.last_pingpong = time.time()
+                                                    if ((time.time() - last_pingpong) > 60):
+                                                        last_pingpong = time.time()
                                                         if (os.path.exists(qExt_pingpong)):
+                                                            qLog.log('info', self.proc_id, qExt_pingpong, display=True, )
                                                             ext_pingpong = subprocess.Popen([qExt_pingpong, qPath_rec, fn0, ], )
                                                                     #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
 
