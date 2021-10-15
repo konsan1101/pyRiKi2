@@ -204,8 +204,8 @@ class proc_cv2dnn_yolo:
         # 初期設定
         self.proc_step = '1'
 
-        last_face      = time.time()
-        last_pingpong  = time.time()
+        last_face      = time.time() - 60
+        last_pingpong  = time.time() - 60
 
         # 定義ファイル
         file_config  = 'cv2dnn/yolov3/yolov3-tiny.cfg'

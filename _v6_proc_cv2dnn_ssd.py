@@ -204,8 +204,8 @@ class proc_cv2dnn_ssd:
         # 初期設定
         self.proc_step = '1'
 
-        last_face      = time.time()
-        last_pingpong  = time.time()
+        last_face      = time.time() - 60
+        last_pingpong  = time.time() - 60
 
         # 定義ファイル
         file_config  = 'cv2dnn/ssd/frozen_inference_graph.pb'

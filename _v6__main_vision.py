@@ -1725,7 +1725,9 @@ if __name__ == '__main__':
             qFunc.statusSet(qBusy_dev_cam,  True)
             qFunc.statusSet(qBusy_dev_dsp,  True)
         if (runMode == 'reception'):
-            qFunc.statusSet(qBusy_dev_dsp,  True)
+            #qFunc.statusSet(qBusy_dev_dsp,  True)
+            if (cam1Dev.isdigit()):
+                qFunc.statusSet(qRdy__v_mirror, True)
 
         display_img = None
         display = None

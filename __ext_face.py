@@ -76,29 +76,42 @@ if __name__ == '__main__':
     if (len(sys.argv) >= 4):
         snd      = str(sys.argv[3])
 
-    # 画像表示
-    imgFile = imgPath + imgFile
-    img = cv2.imread(imgFile)
-    qGuide.init(panel='auto', title='detect_face', image=img,)
-    qGuide.open()
+    # 全画面表示中でなければ認識結果表示
+    if (os.path.exists('temp/_work/busy_dev_display.txt')):
 
-    # メッセージ
-    time.sleep(0.25)
-    qGuide.setMessage(txt='detect', )
+        # 画像表示
+        imgFile = imgPath + imgFile
+        img = cv2.imread(imgFile)
+        qGuide.init(panel='auto', title='detect_face', image=img,)
+        qGuide.open()
 
-    # ピンポン再生
-    if (snd != '_null'):
-        guideSound(filename=snd, sync=False)
+        # メッセージ
+        time.sleep(0.25)
+        qGuide.setMessage(txt='detect', )
 
-    # 待機
-    chkTime = time.time()
-    while ((time.time() - chkTime) < 5):
-        event, values = qGuide.read()
-        if event in (None, 'Exit'):
-            break
+        # ピンポン再生
+        if (snd != '_null'):
+            guideSound(filename=snd, sync=False)
 
-    # 画像消去
-    qGuide.close()
-    qGuide.terminate()
+        # 待機
+        chkTime = time.time()
+        while ((time.time() - chkTime) < 5):
+            event, values = qGuide.read()
+            if event in (None, 'Exit'):
+                break
+
+        # 画像消去
+        qGuide.close()
+        qGuide.terminate()
+
+    # 以外はピンポン再生のみ
+    else:
+
+        # ピンポン再生
+        if (snd != '_null'):
+            guideSound(filename=snd, sync=True)
+
+        # 待機
+        time.sleep(2.00)
 
 

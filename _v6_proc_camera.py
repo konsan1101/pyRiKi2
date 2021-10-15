@@ -545,11 +545,16 @@ class proc_camera:
                         # 小さい輪郭は除く
                         dot0001 = int((input_width * input_height) * 0.001 + 500)
                         bgsegm_contours = list(filter(lambda x: cv2.contourArea(x) > dot0001, bgsegm_contours))
-                        # 輪郭を囲む外接矩形を取得する
-                        bgsegm_boxs = list(map(lambda x: cv2.boundingRect(x), bgsegm_contours))
-                        # 矩形を描画する
-                        for x, y, w, h in bgsegm_boxs:
-                            cv2.rectangle(bgsegm_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                        if (len(bgsegm_contours) != 0):
+                            ## 輪郭を囲む外接矩形を取得する
+                            #bgsegm_boxs = list(map(lambda x: cv2.boundingRect(x), bgsegm_contours))
+                            ## 矩形を描画する
+                            #for x, y, w, h in bgsegm_boxs:
+                            #    cv2.rectangle(bgsegm_img, (x, y), (x + w, y + h), (255,255,0), 1)
+                            # 輪郭を取得する
+                            bgsegm_contours2,hierarchy = cv2.findContours(bgsegm_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                            # 輪郭を描写する
+                            bgsegm_img=cv2.drawContours(bgsegm_img, bgsegm_contours2, -1, (255,255,0), 1)
 
                         # 差分検出結果出力
                         out_name  = '[bgsegm_img]'

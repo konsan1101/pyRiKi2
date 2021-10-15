@@ -247,10 +247,16 @@ class proc_overlay:
         cvdetect1_base  = self.blue_img.copy()
         detect1_time    = time.time()
         detect1_img     = None
+        detect1_sec     = 5
+        if (self.runMode == 'reception'):
+            detect1_sec = 15
         cvdetect2_time  = time.time()
         cvdetect2_base  = self.blue_img.copy()
         detect2_time    = time.time()
         detect2_img     = None
+        detect2_sec     = 5
+        if (self.runMode == 'reception'):
+            detect2_sec = 15
         status_time     = time.time()
         status_img      = None
         ary_max         = 9
@@ -259,6 +265,9 @@ class proc_overlay:
         for i in range(1, ary_max+1):
             ary_time[i] = time.time()
             ary_img[i]  = None
+        ary_sec         = 10
+        if (self.runMode == 'reception'):
+            ary_sec     = 30
         txt_max         = 9
         txt_time        = {}
         txt_img         = {}
@@ -750,7 +759,7 @@ class proc_overlay:
 
                     # 配列画像 overlay
                     for i in range(1, ary_max+1):
-                        if ((time.time() - ary_time[i]) <= 10) and (not ary_img[i] is None):
+                        if ((time.time() - ary_time[i]) <= ary_sec) and (not ary_img[i] is None):
                             over_img = ary_img[i].copy()
                             over_height, over_width = over_img.shape[:2]
 
@@ -820,7 +829,7 @@ class proc_overlay:
                     over_x = over_x2
 
                     # 認識画像(1) overlay
-                    if ((time.time() - detect1_time) <= 5) and (not detect1_img is None):
+                    if ((time.time() - detect1_time) <= detect1_sec) and (not detect1_img is None):
                         over_img = detect1_img.copy()
                         over_height, over_width = over_img.shape[:2]
 
@@ -834,7 +843,7 @@ class proc_overlay:
                         over_x += over_width
 
                     # 認識画像(2) overlay
-                    if ((time.time() - detect2_time) <= 5) and (not detect2_img is None):
+                    if ((time.time() - detect2_time) <= detect2_sec) and (not detect2_img is None):
                         over_img = detect2_img.copy()
                         over_height, over_width = over_img.shape[:2]
 

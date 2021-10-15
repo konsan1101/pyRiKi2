@@ -115,8 +115,8 @@ rem      -----------------------------------------------------------------------
 IF %mode%@==reception@   GOTO RECEPTION
 GOTO RECEPTIONPASS
 :RECEPTION
-    ECHO;Waiting 300s...
-    ping localhost -w 1000 -n 300 >nul
+    ECHO;Waiting 180s...
+    ping localhost -w 1000 -n 180 >nul
     IF EXIST "temp\_work\busy_dev_display.txt"  DEL "temp\_work\busy_dev_display.txt"
 :RECEPTIONPASS
 
