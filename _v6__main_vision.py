@@ -994,9 +994,15 @@ class main_vision:
                             overlay_thread.put(['_cam1_fps_', res_value ])
                         if (res_name == '_reso_'):
                             overlay_thread.put(['_cam1_reso_', res_value ])
+                        if (res_name == '[bgsegm_img]'):
+                            bgsegm_img = res_value.copy()
+
+                            # 画像合成（メイン画像）
+                            overlay_thread.put(['[cam1]', bgsegm_img ])
+                            break
+
                         if (res_name == '[img]'):
                             main_img = res_value.copy()
-
                             if ((qFunc.statusCheck(qBusy_dev_cam) == False) \
                             or  (qFunc.statusCheck(qRdy__v_sendkey) == True)):
 
@@ -1040,7 +1046,6 @@ class main_vision:
 
                             # 画像合成（メイン画像）
                             overlay_thread.put(['[cam1]', main_img ])
-
                             break
 
                 # 画像入力（ワイプカメラ）
@@ -1719,8 +1724,8 @@ if __name__ == '__main__':
         if (runMode == 'assistant'):
             qFunc.statusSet(qBusy_dev_cam,  True)
             qFunc.statusSet(qBusy_dev_dsp,  True)
-        if (runMode == 'reception'):
-            qFunc.statusSet(qBusy_dev_dsp,  True)
+        #if (runMode == 'reception'):
+        #    qFunc.statusSet(qBusy_dev_dsp,  True)
 
         display_img = None
         display = None

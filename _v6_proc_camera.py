@@ -221,6 +221,12 @@ class proc_camera:
         if (not self.camDev.isdigit()):
             capture = cv2.VideoCapture(self.camDev)
 
+        # 受付監視機能（差分検出）
+        bgsegm_model = None
+        if (self.runMode == 'reception'):
+            bgsegm_model = cv2.bgsegm.createBackgroundSubtractorMOG()
+        bgsegm_last = time.time()
+
         # ＦＰＳ計測
         qFPS_class = _v6__qFunc.qFPS_class()
         qFPS_last  = time.time()
@@ -330,6 +336,7 @@ class proc_camera:
             #if (True):
 
                 # 画像取得
+                frame = None
                 if (not capture is None):
                     ret, frame = capture.read()
                 else:
@@ -337,6 +344,8 @@ class proc_camera:
                     frame = self.blue_img.copy()
 
                 if (ret == False):
+                    frame = None
+
                     #qLog.log('info', self.proc_id, 'capture error!', display=self.logDisp,)
                     #time.sleep(5.00)
                     #self.proc_step = '9'
@@ -356,7 +365,7 @@ class proc_camera:
                     if (not self.camDev.isdigit()):
                         capture = cv2.VideoCapture(self.camDev)
 
-                else:
+                if (not frame is None):
 
                     # 実行カウンタ
                     self.proc_last = time.time()
@@ -508,8 +517,6 @@ class proc_camera:
                                         input_img[over_y:over_y+over_height, over_x:over_x+over_width] = over_img
                                         cv2.rectangle(input_img,(over_x,over_y),(over_x+over_width,over_y+over_height),(0,0,0),1)
 
-
-
                     # ＦＰＳ計測
                     fps = qFPS_class.get()
                     if ((time.time() - qFPS_last) > 5):
@@ -527,8 +534,36 @@ class proc_camera:
                             out_value += ' (Zoom=' + self.camZoom + ')'
                         cn_s.put([out_name, out_value])
 
+                    # 受付監視機能（差分検出）
+                    if (not bgsegm_model is None):
+                        # 出力画像
+                        bgsegm_img = input_img.copy()
+                        # 差分演算する
+                        bgsegm_mask = bgsegm_model.apply(input_img)
+                        # 輪郭抽出する
+                        bgsegm_contours = cv2.findContours(bgsegm_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+                        # 小さい輪郭は除く
+                        dot0001 = int((input_width * input_height) * 0.001 + 500)
+                        bgsegm_contours = list(filter(lambda x: cv2.contourArea(x) > dot0001, bgsegm_contours))
+                        # 輪郭を囲む外接矩形を取得する
+                        bgsegm_boxs = list(map(lambda x: cv2.boundingRect(x), bgsegm_contours))
+                        # 矩形を描画する
+                        for x, y, w, h in bgsegm_boxs:
+                            cv2.rectangle(bgsegm_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                        # 差分検出結果出力
+                        out_name  = '[bgsegm_img]'
+                        out_value = bgsegm_img.copy()
+                        cn_s.put([out_name, out_value])
+
+                        # 監視中余計な画像出力抑止
+                        if (len(bgsegm_contours) == 0) and ((time.time() - bgsegm_last) < 3600):
+                            input_img = None
+                        else:
+                            bgsegm_last = time.time()
+
                     # 結果出力
-                    if (cn_s.qsize() == 0):
+                    if (not input_img is None):
                         out_name  = '[img]'
                         out_value = input_img.copy()
                         cn_s.put([out_name, out_value])
