@@ -337,10 +337,24 @@ class proc_camera:
                     frame = self.blue_img.copy()
 
                 if (ret == False):
-                    qLog.log('info', self.proc_id, 'capture error!', display=self.logDisp,)
+                    #qLog.log('info', self.proc_id, 'capture error!', display=self.logDisp,)
+                    #time.sleep(5.00)
+                    #self.proc_step = '9'
+                    #break
+
+                    qLog.log('warning', self.proc_id, 'capture error!', )
+ 
+                    # デバイス開放
+                    if (not capture is None): 
+                        capture.release()
+                        capture = None
+
                     time.sleep(5.00)
-                    self.proc_step = '9'
-                    break
+
+                    # デバイス設定
+                    capture = None
+                    if (not self.camDev.isdigit()):
+                        capture = cv2.VideoCapture(self.camDev)
 
                 else:
 
