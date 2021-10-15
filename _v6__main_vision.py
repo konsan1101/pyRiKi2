@@ -1724,8 +1724,8 @@ if __name__ == '__main__':
         if (runMode == 'assistant'):
             qFunc.statusSet(qBusy_dev_cam,  True)
             qFunc.statusSet(qBusy_dev_dsp,  True)
-        #if (runMode == 'reception'):
-        #    qFunc.statusSet(qBusy_dev_dsp,  True)
+        if (runMode == 'reception'):
+            qFunc.statusSet(qBusy_dev_dsp,  True)
 
         display_img = None
         display = None
