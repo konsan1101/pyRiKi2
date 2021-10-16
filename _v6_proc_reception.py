@@ -518,7 +518,7 @@ class proc_reception:
         time.sleep(2)
 
         # 案内２
-        qRiKi.tts(self.proc_id, 'ja, 御用の方はしばらくお待ちください。ありがとうございました。')
+        qRiKi.tts(self.proc_id, 'ja, ごようのかたは、しばらくお待ちください。ありがとうございました。')
 
         # 待機
         time.sleep(5)
