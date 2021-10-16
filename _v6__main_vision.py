@@ -184,12 +184,14 @@ class main_vision:
         self.runMode     = runMode
         self.cam1Dev     = cam1Dev
         self.cam1Dev_org = cam1Dev
+        self.cam1Dev_self= qFunc.chkSelfDev(cam1Dev)
         self.cam1Mode    = cam1Mode
         self.cam1Stretch = cam1Stretch
         self.cam1Rotate  = cam1Rotate
         self.cam1Zoom    = cam1Zoom
         self.cam2Dev     = cam2Dev
         self.cam2Dev_org = cam2Dev
+        self.cam2Dev_self= qFunc.chkSelfDev(cam2Dev)
         self.cam2Mode    = cam2Mode
         self.cam2Stretch = cam2Stretch
         self.cam2Rotate  = cam2Rotate
@@ -1778,7 +1780,7 @@ if __name__ == '__main__':
             qFunc.statusSet(qBusy_dev_dsp,  True)
         if (runMode == 'reception'):
             qFunc.statusSet(qBusy_dev_dsp,  True)
-            if (cam1Dev.isdigit()):
+            if (qFunc.chkSelfDev(cam1Dev) == True):
                 qFunc.statusSet(qRdy__v_mirror, True)
 
         display_img = None

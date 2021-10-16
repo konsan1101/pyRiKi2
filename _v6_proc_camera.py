@@ -116,6 +116,7 @@ class proc_camera:
                     camDev='0', camMode='harf', camStretch='0', camRotate='0', camZoom='1.0', camFps='5', ):
         self.runMode    = runMode
         self.camDev     = camDev
+        self.camDev_self= qFunc.chkSelfDev(camDev)
         self.camMode    = camMode
         self.camStretch = camStretch
         self.camRotate  = camRotate
@@ -229,7 +230,6 @@ class proc_camera:
         bgsegm_model = None
         if (self.runMode == 'reception'):
             bgsegm_model = cv2.bgsegm.createBackgroundSubtractorMOG()
-        bgsegm_last = time.time()
 
         # ＦＰＳ計測
         qFPS_class = _v6__qFunc.qFPS_class()
@@ -567,26 +567,34 @@ class proc_camera:
                         dot0001 = int((input_width * input_height) * 0.001 + 500)
                         bgsegm_contours = list(filter(lambda x: cv2.contourArea(x) > dot0001, bgsegm_contours))
                         if (len(bgsegm_contours) != 0):
-                            ## 輪郭を囲む外接矩形を取得する
-                            #bgsegm_boxs = list(map(lambda x: cv2.boundingRect(x), bgsegm_contours))
-                            ## 矩形を描画する
-                            #for x, y, w, h in bgsegm_boxs:
-                            #    cv2.rectangle(bgsegm_img, (x, y), (x + w, y + h), (255,255,0), 1)
-                            # 輪郭を取得する
-                            bgsegm_contours2,hierarchy = cv2.findContours(bgsegm_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                            # 輪郭を描写する
-                            bgsegm_img=cv2.drawContours(bgsegm_img, bgsegm_contours2, -1, (255,255,0), 1)
-
-                        # 差分検出結果出力
-                        out_name  = '[bgsegm_img]'
-                        out_value = bgsegm_img.copy()
-                        cn_s.put([out_name, out_value])
+                            # 輪郭を囲む外接矩形を取得する
+                            bgsegm_boxs = list(map(lambda x: cv2.boundingRect(x), bgsegm_contours))
+                            # 矩形を描画する
+                            for x, y, w, h in bgsegm_boxs:
+                                cv2.rectangle(bgsegm_img, (x, y), (x + w, y + h), (255,255,0), 3)
+                            ## 輪郭を取得する
+                            #bgsegm_contours2,hierarchy = cv2.findContours(bgsegm_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                            ## 輪郭を描写する
+                            #bgsegm_img=cv2.drawContours(bgsegm_img, bgsegm_contours2, -1, (255,255,0), 3)
 
                         # 監視中余計な画像出力抑止
-                        if (len(bgsegm_contours) == 0) and ((time.time() - bgsegm_last) < 3600):
+                        if (len(bgsegm_contours) > 0):
+                            if (self.camDev_self == False):
+                                # 結果出力
+                                out_name  = '[bgsegm_img]'
+                                out_value = bgsegm_img.copy()
+                                cn_s.put([out_name, out_value])
+                            # 結果出力
+                            out_name  = '[img]'
+                            out_value = input_img.copy()
+                            cn_s.put([out_name, out_value])
                             input_img = None
                         else:
-                            bgsegm_last = time.time()
+                            # 結果出力
+                            out_name  = '[bgsegm_img]'
+                            out_value = input_img.copy()
+                            cn_s.put([out_name, out_value])
+                            input_img = None
 
                     # 結果出力
                     if (not input_img is None):
@@ -660,9 +668,13 @@ if __name__ == '__main__':
     cv2.namedWindow('Display', 1)
     cv2.moveWindow( 'Display', 0, 0)
 
+    #runMode='debug'
+    runMode='reception'
+    #camDev='0'
     #camDev='http://192.168.200.251/nphMotionJpeg?Resolution=640x480'
-    camDev='0'
-    camera_thread = proc_camera(name='camera', id='0', runMode='debug', 
+    #camDev='http://192.168.86.73:5555/MotionJpeg?w=640&h=480'
+    camDev='http://localhost:5555/MotionJpeg?w=640&h=480'
+    camera_thread = proc_camera(name='camera', id='0', runMode=runMode, 
                     camDev=camDev, camMode='vga', camStretch='0', camRotate='0', camZoom='1.0', camFps='5',)
     camera_thread.begin()
 
@@ -680,6 +692,11 @@ if __name__ == '__main__':
         res_value = res_data[1]
         if (res_name != ''):
             if (res_name == '[img]'):
+                print(res_name, )
+                cv2.imshow('Display', res_value.copy() )
+                cv2.waitKey(1)
+            elif (res_name == '[bgsegm_img]'):
+                print(res_name, )
                 cv2.imshow('Display', res_value.copy() )
                 cv2.waitKey(1)
             else:

@@ -204,30 +204,31 @@ class proc_reception:
     def __init__(self, name='thread', id='0', runMode='debug',
         camDev='0', ):
 
-        self.path      = qPath_v_recept
+        self.path        = qPath_v_recept
 
-        self.runMode   = runMode
-        self.camDev    = camDev
+        self.runMode     = runMode
+        self.camDev      = camDev
+        self.camDev_self = qFunc.chkSelfDev(camDev)
 
-        self.breakFlag = threading.Event()
+        self.breakFlag   = threading.Event()
         self.breakFlag.clear()
-        self.name      = name
-        self.id        = id
-        self.proc_id   = '{0:10s}'.format(name).replace(' ', '_')
-        self.proc_id   = self.proc_id[:-2] + '_' + str(id)
+        self.name        = name
+        self.id          = id
+        self.proc_id     = '{0:10s}'.format(name).replace(' ', '_')
+        self.proc_id     = self.proc_id[:-2] + '_' + str(id)
         if (runMode == 'debug'):
             self.logDisp = True
         else:
             self.logDisp = False
         qLog.log('info', self.proc_id, 'init', display=self.logDisp, )
 
-        self.proc_s    = None
-        self.proc_r    = None
-        self.proc_main = None
-        self.proc_beat = None
-        self.proc_last = None
-        self.proc_step = '0'
-        self.proc_seq  = 0
+        self.proc_s      = None
+        self.proc_r      = None
+        self.proc_main   = None
+        self.proc_beat   = None
+        self.proc_last   = None
+        self.proc_step   = '0'
+        self.proc_seq    = 0
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -390,8 +391,8 @@ class proc_reception:
                                 qFunc.remove(proc_file)
 
                                 # ログ
-                                if (self.runMode == 'debug') or (not self.camDev.isdigit()):
-                                    qLog.log('info', self.proc_id, '' + proc_name + u' → ' + work_name, display=self.logDisp,)
+                                #if (self.runMode == 'debug') or (not self.camDev.isdigit()):
+                                #    qLog.log('info', self.proc_id, '' + proc_name + u' → ' + work_name, display=self.logDisp,)
 
                                 # ビジー設定
                                 if (qFunc.statusCheck(self.fileBsy) == False):
@@ -473,15 +474,19 @@ class proc_reception:
         out_value = [proc_file]
         cn_s.put([out_name, out_value])
 
+        # 遠隔カメラは、ここまで
+        if (self.camDev_self == False):
+            return False
+
         # 顔認証
-        if (self.camDev.isdigit()):
+        img = cv2.imread(work_file)
+        out_img, out_face = qFace.detect_face(inp_image=img, )
 
-            img = cv2.imread(work_file)
-            out_img, out_face = qFace.detect_face(inp_image=img, )
+        # 顔認識できなかった場合、ここまで
+        if (len(out_face) == 0):
+            return False
 
-            # 顔認識の場合、受付動作
-            if (len(out_face) == 0):
-                return False
+        # ここから受付動作
 
         # ビジー設定
         qFunc.statusSet(qBusy_v_recept, True)
@@ -495,9 +500,7 @@ class proc_reception:
         qFunc.statusSet(qBusy_dev_dsp, False)
 
         # 案内１
-        qRiKi.tts(self.proc_id, 'ja, 受付は無人となっております。' \
-                              + '合図のあとに、お名前とご用件を、お話しください。' \
-                              + '約１分間音声認識いたします。')
+        qRiKi.tts(self.proc_id, 'ja, 受付は無人となっております。')
 
         # 待機
         time.sleep(2)
@@ -506,7 +509,7 @@ class proc_reception:
         qFunc.statusSet(qBusy_dev_mic, False)
 
         # 音声認識
-        time.sleep(60)
+        time.sleep(30)
 
         # マイク　停止
         qFunc.statusSet(qBusy_dev_mic, True)
@@ -515,7 +518,10 @@ class proc_reception:
         time.sleep(2)
 
         # 案内２
-        qRiKi.tts(self.proc_id, 'ja, ありがとうございました。')
+        qRiKi.tts(self.proc_id, 'ja, 御用の方はしばらくお待ちください。ありがとうございました。')
+
+        # 待機
+        time.sleep(5)
 
         # フォルダクリア
         qFunc.makeDirs(qPath_v_recept, True)

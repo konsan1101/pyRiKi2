@@ -41,6 +41,9 @@ import io
 if (os.name == 'nt'):
     import win32clipboard
 
+import socket
+qHOSTNAME = socket.gethostname().lower()
+
 
 
 qPath_sounds    = '_sounds/'
@@ -588,6 +591,18 @@ class qFunc_class:
 
         return False
 
+    def chkSelfDev(self, dev=None, ):
+        if (dev is None):
+            return False
+        elif (dev.isdigit()):
+            return True
+        elif (str(dev).lower().find('localhost')  >= 0):
+            return True
+        elif (str(dev).lower().find(qHOSTNAME) >= 0):
+            return True
+        else:
+            return False
+
     # qFunc,qGuide 共通
     def cv2pil(self, cv2_image=None):
         try:
@@ -746,10 +761,6 @@ if (__name__ == '__main__'):
 
     qFunc.kill('sox')
 
-    qFunc.guideDisplay(display=True, panel='1', filename='_kernel_start_', txt='waiting...')
-    time.sleep(5.00)
-    qFunc.guideDisplay(display=False, )
-
     qFunc.notePad(txt=u'開始')
     #qFunc.sendKey(txt=u'日本語')
     #qFunc.sendKey(txt=u'abcdefg',lf=False)
@@ -760,6 +771,8 @@ if (__name__ == '__main__'):
     qFunc.img2clip('cv2dnn\dog.jpg')
 
     qFunc.notePad(txt=u'終了')
+
+    print(qFunc.chkSelfDev('http://localhost:...'))
 
 
 
