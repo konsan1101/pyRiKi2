@@ -64,26 +64,28 @@ qPath_temp       = setFolder('temp/'   )
 qPath_log        = setFolder(qPath_temp + '_log/'          )
 qPath_work       = setFolder(qPath_temp + '_work/'         )
 qPath_rec        = setFolder(qPath_temp + '_recorder/'     )
-qPath_s_ctrl     = setFolder(qPath_temp + 's5_0control/'   )
-qPath_s_inp      = setFolder(qPath_temp + 's5_1voice/'     )
-qPath_s_wav      = setFolder(qPath_temp + 's5_2wav/'       )
-qPath_s_jul      = setFolder(qPath_temp + 's5_3stt_julius/')
-qPath_s_STT      = setFolder(qPath_temp + 's5_4stt_txt/'   )
-qPath_s_TTS      = setFolder(qPath_temp + 's5_5tts_txt/'   )
-qPath_s_TRA      = setFolder(qPath_temp + 's5_6tra_txt/'   )
-qPath_s_play     = setFolder(qPath_temp + 's5_7play/'      )
-qPath_v_ctrl     = setFolder(qPath_temp + 'v5_0control/'   )
-qPath_v_inp      = setFolder(qPath_temp + 'v5_1vision/'    )
-qPath_v_jpg      = setFolder(qPath_temp + 'v5_2jpg/'       )
-qPath_v_detect   = setFolder(qPath_temp + 'v5_3detect/'    )
-qPath_v_cv       = setFolder(qPath_temp + 'v5_5cv_txt/'    )
-qPath_v_photo    = setFolder(qPath_temp + 'v5_7photo/'     )
-qPath_v_msg      = setFolder(qPath_temp + 'v5_7photo_msg/' )
-qPath_d_ctrl     = setFolder(qPath_temp + 'd5_0control/'   )
-qPath_d_play     = setFolder(qPath_temp + 'd5_1play/'      )
-qPath_d_prtscn   = setFolder(qPath_temp + 'd5_2screen/'    )
-qPath_d_movie    = setFolder(qPath_temp + 'd5_5movie/'     )
-qPath_d_upload   = setFolder(qPath_temp + 'd5_9upload/'    )
+qPath_recept     = setFolder(qPath_temp + '_recept/'       )
+qPath_s_ctrl     = setFolder(qPath_temp + 's6_0control/'   )
+qPath_s_inp      = setFolder(qPath_temp + 's6_1voice/'     )
+qPath_s_wav      = setFolder(qPath_temp + 's6_2wav/'       )
+qPath_s_jul      = setFolder(qPath_temp + 's6_3stt_julius/')
+qPath_s_STT      = setFolder(qPath_temp + 's6_4stt_txt/'   )
+qPath_s_TTS      = setFolder(qPath_temp + 's6_5tts_txt/'   )
+qPath_s_TRA      = setFolder(qPath_temp + 's6_6tra_txt/'   )
+qPath_s_play     = setFolder(qPath_temp + 's6_7play/'      )
+qPath_v_ctrl     = setFolder(qPath_temp + 'v6_0control/'   )
+qPath_v_inp      = setFolder(qPath_temp + 'v6_1vision/'    )
+qPath_v_jpg      = setFolder(qPath_temp + 'v6_2jpg/'       )
+qPath_v_detect   = setFolder(qPath_temp + 'v6_3detect/'    )
+qPath_v_cv       = setFolder(qPath_temp + 'v6_5cv_txt/'    )
+qPath_v_photo    = setFolder(qPath_temp + 'v6_7photo/'     )
+qPath_v_msg      = setFolder(qPath_temp + 'v6_7photo_msg/' )
+qPath_v_recept   = setFolder(qPath_temp + 'v6_9recept/'    )
+qPath_d_ctrl     = setFolder(qPath_temp + 'd6_0control/'   )
+qPath_d_play     = setFolder(qPath_temp + 'd6_1play/'      )
+qPath_d_prtscn   = setFolder(qPath_temp + 'd6_2screen/'    )
+qPath_d_movie    = setFolder(qPath_temp + 'd6_5movie/'     )
+qPath_d_upload   = setFolder(qPath_temp + 'd6_9upload/'    )
 
 qBusy_dev_cpu    = qPath_work + 'busy_dev_cpu.txt'
 qBusy_dev_com    = qPath_work + 'busy_dev_commnication.txt'
@@ -104,6 +106,7 @@ qBusy_v_inp      = qPath_work + 'busy_v_1video.txt'
 qBusy_v_QR       = qPath_work + 'busy_v_2QR.txt'
 qBusy_v_jpg      = qPath_work + 'busy_v_3jpg.txt'
 qBusy_v_CV       = qPath_work + 'busy_v_5cv.txt'
+qBusy_v_recept   = qPath_work + 'busy_v_9recept.txt'
 qBusy_d_ctrl     = qPath_work + 'busy_d_0control.txt'
 qBusy_d_inp      = qPath_work + 'busy_d_1screen.txt'
 qBusy_d_QR       = qPath_work + 'busy_d_2QR.txt'
@@ -138,6 +141,7 @@ class qRiKi_class:
         self.makeDirs(qPath_log,      False)
         self.makeDirs(qPath_work,     False)
         self.makeDirs(qPath_rec,      False)
+        self.makeDirs(qPath_recept,   False)
 
         self.makeDirs(qPath_s_ctrl,   False)
         self.makeDirs(qPath_s_inp,    False)
@@ -154,6 +158,7 @@ class qRiKi_class:
         self.makeDirs(qPath_v_cv,     False)
         self.makeDirs(qPath_v_photo,  False)
         self.makeDirs(qPath_v_msg,    False)
+        self.makeDirs(qPath_v_recept, False)
         self.makeDirs(qPath_d_ctrl,   False)
         self.makeDirs(qPath_d_play,   False)
         self.makeDirs(qPath_d_prtscn, False)
@@ -214,6 +219,7 @@ class qRiKi_class:
         if (field == 'qPath_log'       ): return qPath_log
         if (field == 'qPath_work'      ): return qPath_work
         if (field == 'qPath_rec'       ): return qPath_rec
+        if (field == 'qPath_recept'    ): return qPath_recept
 
         if (field == 'qPath_s_ctrl'    ): return qPath_s_ctrl
         if (field == 'qPath_s_inp'     ): return qPath_s_inp
@@ -230,6 +236,7 @@ class qRiKi_class:
         if (field == 'qPath_v_cv'      ): return qPath_v_cv
         if (field == 'qPath_v_photo'   ): return qPath_v_photo
         if (field == 'qPath_v_msg'     ): return qPath_v_msg
+        if (field == 'qPath_v_recept'  ): return qPath_v_recept
         if (field == 'qPath_d_ctrl'    ): return qPath_d_ctrl
         if (field == 'qPath_d_play'    ): return qPath_d_play
         if (field == 'qPath_d_prtscn'  ): return qPath_d_prtscn
@@ -255,6 +262,7 @@ class qRiKi_class:
         if (field == 'qBusy_v_QR'      ): return qBusy_v_QR
         if (field == 'qBusy_v_jpg'     ): return qBusy_v_jpg
         if (field == 'qBusy_v_CV'      ): return qBusy_v_CV
+        if (field == 'qBusy_v_recept'  ): return qBusy_v_recept
         if (field == 'qBusy_d_ctrl'    ): return qBusy_d_ctrl
         if (field == 'qBusy_d_inp'     ): return qBusy_d_inp
         if (field == 'qBusy_d_QR'      ): return qBusy_d_QR
@@ -415,6 +423,7 @@ class qRiKi_class:
         self.statusSet(qBusy_v_QR,      Flag)
         self.statusSet(qBusy_v_jpg,     Flag)
         self.statusSet(qBusy_v_CV,      Flag)
+        self.statusSet(qBusy_v_recept,  Flag)
         self.statusSet(qRdy__v_mirror,  Flag)
         self.statusSet(qRdy__v_reader,  Flag)
         self.statusSet(qRdy__v_sendkey, Flag)
@@ -506,6 +515,7 @@ class qBusy_status_txts_class(object):
         self.v_QR      = False
         self.v_jpg     = False
         self.v_CV      = False
+        self.v_recept  = False
         self.v_mirror  = False
         self.v_reader  = False
         self.v_sendkey = False
@@ -620,6 +630,10 @@ class qBusy_status_txts_class(object):
         if (check != self.v_CV):
             change = True
         self.v_CV = check
+        check = self.statusCheck(qBusy_v_recept)
+        if (check != self.v_recept):
+            change = True
+        self.v_recept = check
         check = self.statusCheck(qRdy__v_mirror)
         if (check != self.v_mirror):
             change = True
@@ -770,6 +784,10 @@ class qBusy_status_txts_class(object):
             txts.append(' CV     : busy!___')
         else:
             txts.append(' CV     : ________')
+        if (self.v_recept == True):
+            txts.append(' recept : busy!___')
+        else:
+            txts.append(' recept : ________')
         if (self.v_reader == True):
             txts.append(' Reader : active__')
         else:

@@ -17,9 +17,18 @@ import datetime
 import codecs
 import glob
 
+import shutil
+
+import cv2
+
 import queue
 import threading
 import subprocess
+
+
+
+# 外部プログラム
+qExt_face                = '__ext_face.bat'
 
 
 
@@ -107,12 +116,95 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
-class proc_vin2jpg:
+# 顔認識
+class qFace_class:
 
-    def __init__(self, name='thread', id='0', runMode='debug', 
+    def __init__(self, ): 
+        self.face_procWidth  = 640
+        self.face_procHeight = 480
+        self.face_casName    = '_xml/_vision_opencv_face.xml'
+        self.face_cascade    = cv2.CascadeClassifier(self.face_casName)
+        self.face_haar_scale    = 1.1
+        self.face_min_neighbors = 10
+        self.face_min_size      = ( 15, 15)
+
+    def detect_face(self, inp_image=None, ):
+        output_img  = inp_image.copy()
+        output_face = []
+
+        try:
+
+                image_img   = inp_image.copy()
+                image_height, image_width = image_img.shape[:2]
+
+                output_img  = image_img.copy()
+
+                proc_width  = image_width
+                proc_height = image_height
+                if (proc_width  > self.face_procWidth):
+                    proc_width  = self.face_procWidth
+                    proc_height = int(proc_width * image_height / image_width)
+                if (proc_width  != image_width ) \
+                or (proc_height != image_height):
+                    proc_img = cv2.resize(image_img, (proc_width, proc_height))
+                else:
+                    proc_img = image_img.copy()
+                    proc_height, proc_width = proc_img.shape[:2]
+
+                gray1 = cv2.cvtColor(proc_img, cv2.COLOR_BGR2GRAY)
+                gray2 = cv2.equalizeHist(gray1)
+
+                hit_count = 0
+                hit_img   = None
+
+                rects = self.face_cascade.detectMultiScale(gray2, 
+                        scaleFactor=self.face_haar_scale,
+                        minNeighbors=self.face_min_neighbors,
+                        minSize=self.face_min_size, )
+                if (not rects is None):
+                    for (hit_x, hit_y, hit_w, hit_h) in rects:
+                        hit_count += 1
+                        x  = int(hit_x * image_width  / proc_width )
+                        y  = int(hit_y * image_height / proc_height)
+                        w  = int(hit_w * image_width  / proc_width )
+                        h  = int(hit_h * image_height / proc_height)
+                        if (x > 10):
+                            x -= 10
+                            w += 20
+                        if (y > 10):
+                            y -= 10
+                            h += 20
+                        if (x < 0):
+                            x = 0
+                        if (y < 0):
+                            y = 0
+                        if ((x + w) > image_width):
+                                w = image_width - x
+                        if ((y + h) > image_height):
+                                h = image_height - y
+                        cv2.rectangle(output_img, (x,y), (x+w,y+h), (0,0,255), 2)
+
+                        hit_img = cv2.resize(image_img[y:y+h, x:x+w],(h,w))
+
+                        # 結果出力
+                        output_face.append(hit_img)
+
+        except:
+            pass
+
+        return output_img, output_face
+
+# 顔認識
+qFace = qFace_class()
+
+
+
+class proc_reception:
+
+    def __init__(self, name='thread', id='0', runMode='debug',
         camDev='0', ):
 
-        self.path      = qPath_v_inp
+        self.path      = qPath_v_recept
 
         self.runMode   = runMode
         self.camDev    = camDev
@@ -173,7 +265,7 @@ class proc_vin2jpg:
             time.sleep(0.25)
 
     def put(self, data, ):
-        self.proc_s.put(data)        
+        self.proc_s.put(data)
         return True
 
     def checkGet(self, waitMax=5, ):
@@ -185,8 +277,8 @@ class proc_vin2jpg:
 
     def get(self, ):
         if (self.proc_r.qsize() == 0):
-            return ['', '']        
-        data = self.proc_r.get()        
+            return ['', '']
+        data = self.proc_r.get()
         self.proc_r.task_done()
         return data
 
@@ -198,6 +290,9 @@ class proc_vin2jpg:
 
         # 初期設定
         self.proc_step = '1'
+
+        self.last_extface   = time.time() - 60
+        self.last_pingpong  = time.time() - 60
 
         # 待機ループ
         self.proc_step = '5'
@@ -234,11 +329,9 @@ class proc_vin2jpg:
                 out_value = '_ready_'
                 cn_s.put([out_name, out_value])
 
-
-
             # 処理
             path = self.path
-            path_files = glob.glob(path + '*')
+            path_files = glob.glob(path + '*.jpg')
             path_files.sort()
             if (len(path_files) > 0):
 
@@ -289,12 +382,12 @@ class proc_vin2jpg:
                             if (os.path.exists(work_file)):
                                 os.remove(work_file)
 
-                            qFunc.copy(proc_file, work_file, )
+                            #qFunc.copy(proc_file, work_file)
+                            shutil.copy2(proc_file, work_file)
 
                             if (os.path.exists(work_file)):
 
-                                if (self.camDev.isdigit()):
-                                    os.remove(proc_file)
+                                qFunc.remove(proc_file)
 
                                 # ログ
                                 if (self.runMode == 'debug') or (not self.camDev.isdigit()):
@@ -303,39 +396,35 @@ class proc_vin2jpg:
                                 # ビジー設定
                                 if (qFunc.statusCheck(self.fileBsy) == False):
                                     qFunc.statusSet(self.fileBsy, True)
-                                    if (str(self.id) == '0'):
-                                        qFunc.statusSet(qBusy_v_jpg, True)
 
-                                # ＡＩ処理
+                                # 処理
                                 self.proc_last = time.time()
-                                self.sub_proc(seq4, proc_file, work_file, cn_s, )
-
-                                time.sleep(0.50)
+                                face_hit = self.sub_proc(seq4, proc_file, work_file, cn_s, )
+                                if (face_hit == True):
+                                    break
 
                 #except Exception as e:
                 #    pass
 
-
-
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-            if (str(self.id) == '0'):
-                qFunc.statusSet(qBusy_v_jpg, False)
+            qFunc.statusSet(qBusy_v_recept, False)
 
             # アイドリング
             slow = False
             if  (qFunc.statusCheck(qBusy_dev_cpu) == True):
                 slow = True
-            if  (qFunc.statusCheck(qBusy_dev_cam) == True):
+            if  (qFunc.statusCheck(qBusy_dev_cam) == True) \
+            and (qFunc.statusCheck(qBusy_dev_mic) == True):
                 slow = True
 
             if (slow == True):
                 time.sleep(1.00)
             else:
                 if (cn_r.qsize() == 0):
-                    time.sleep(0.25)
+                    time.sleep(0.50)
                 else:
-                    time.sleep(0.05)
+                    time.sleep(0.25)
 
         # 終了処理
         if (True):
@@ -345,8 +434,7 @@ class proc_vin2jpg:
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-            if (str(self.id) == '0'):
-                qFunc.statusSet(qBusy_v_jpg, False)
+            qFunc.statusSet(qBusy_v_recept, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -365,19 +453,82 @@ class proc_vin2jpg:
 
     def sub_proc(self, seq4, proc_file, work_file, cn_s, ):
 
-        # 結果出力
-        if (cn_s.qsize() < 99):
-            out_name  = 'filename'
-            out_value = work_file
-            cn_s.put([out_name, out_value])
+        if (os.name == 'nt'):
 
-        # コピー
-        filename = proc_file
-        filename = filename.replace(qPath_v_inp, '')
-        filename = filename.replace(qPath_v_jpg, '')
-        filename = filename.replace(qPath_work,  '')
-        filename = qPath_v_jpg + filename
-        qFunc.copy(work_file, filename, )
+            # ファイル名分解
+            file_name = work_file.replace(qPath_work, '')
+
+            # 外部プログラム
+            if ((time.time() - self.last_extface) > 0):
+                self.last_extface = time.time()
+                sound = '_null'
+                if ((time.time() - self.last_pingpong) > 60):
+                    self.last_pingpong = time.time()
+                    sound = '_pingpong'
+                if (os.path.exists(qExt_face)):
+                    ext_face = subprocess.Popen([qExt_face, qPath_work, file_name, sound, ], )
+                               #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+        out_name  = '[img_file]'
+        out_value = [proc_file]
+        cn_s.put([out_name, out_value])
+
+        # 顔認証
+        if (self.camDev.isdigit()):
+
+            img = cv2.imread(work_file)
+            out_img, out_face = qFace.detect_face(inp_image=img, )
+
+            # 顔認識の場合、受付動作
+            if (len(out_face) == 0):
+                return False
+
+        # ビジー設定
+        qFunc.statusSet(qBusy_v_recept, True)
+
+        # カメラ・マイク停止
+        qFunc.statusSet(qBusy_dev_cam, True)
+        qFunc.statusSet(qBusy_dev_mic, True)
+
+        # 表示　開始
+        busy_dsp = qFunc.statusCheck(qBusy_dev_dsp, )
+        qFunc.statusSet(qBusy_dev_dsp, False)
+
+        # 案内１
+        qRiKi.tts(self.proc_id, 'ja, 受付は無人となっております。' \
+                              + '合図のあとに、お名前とご用件を、お話しください。' \
+                              + '約１分間音声認識いたします。')
+
+        # 待機
+        time.sleep(2)
+
+        # マイク　開始
+        qFunc.statusSet(qBusy_dev_mic, False)
+
+        # 音声認識
+        time.sleep(60)
+
+        # マイク　停止
+        qFunc.statusSet(qBusy_dev_mic, True)
+
+        # 待機
+        time.sleep(2)
+
+        # 案内２
+        qRiKi.tts(self.proc_id, 'ja, ありがとうございました。')
+
+        # フォルダクリア
+        qFunc.makeDirs(qPath_v_recept, True)
+        
+        # ビジー解除
+        qFunc.statusSet(qBusy_v_recept, True)
+
+        # カメラ・表示・マイク　再開
+        qFunc.statusSet(qBusy_dev_cam, False)
+        qFunc.statusSet(qBusy_dev_dsp, busy_dsp)
+        qFunc.statusSet(qBusy_dev_mic, False)
+
+        return True
 
 
 
@@ -393,34 +544,31 @@ if __name__ == '__main__':
     qLog.init(mode='logger', filename=filename, )
 
     # 設定
-    vin2jpg_thread = proc_vin2jpg('vin2jpg', '0', )
-    vin2jpg_thread.begin()
-
-    qFunc.copy('_photos/_photo_qrcode.jpg', qPath_v_inp + '_photo_qrcode.jpg')
-    qFunc.copy('_photos/_photo_ocr_meter.jpg', qPath_v_inp + '_photo_ocr_meter.jpg')
+    reception_thread = proc_reception('reception', '0', )
+    reception_thread.begin()
 
 
 
     # ループ
     chktime = time.time()
-    while ((time.time() - chktime) < 15):
+    while ((time.time() - chktime) < 120):
 
-        res_data  = vin2jpg_thread.get()
+        res_data  = reception_thread.get()
         res_name  = res_data[0]
         res_value = res_data[1]
         if (res_name != ''):
             print(res_name, res_value, )
 
-        if (vin2jpg_thread.proc_s.qsize() == 0):
-            vin2jpg_thread.put(['_status_', ''])
+        if (reception_thread.proc_s.qsize() == 0):
+            reception_thread.put(['_status_', ''])
 
         time.sleep(0.05)
 
 
 
     time.sleep(1.00)
-    vin2jpg_thread.abort()
-    del vin2jpg_thread
+    reception_thread.abort()
+    del reception_thread
 
 
 

@@ -49,6 +49,7 @@ qPath_fonts      = qRiKi.getValue('qPath_fonts'      )
 qPath_log        = qRiKi.getValue('qPath_log'        )
 qPath_work       = qRiKi.getValue('qPath_work'       )
 qPath_rec        = qRiKi.getValue('qPath_rec'        )
+qPath_recept     = qRiKi.getValue('qPath_recept'     )
 
 qPath_s_ctrl     = qRiKi.getValue('qPath_s_ctrl'     )
 qPath_s_inp      = qRiKi.getValue('qPath_s_inp'      )
@@ -65,6 +66,7 @@ qPath_v_detect   = qRiKi.getValue('qPath_v_detect'   )
 qPath_v_cv       = qRiKi.getValue('qPath_v_cv'       )
 qPath_v_photo    = qRiKi.getValue('qPath_v_photo'    )
 qPath_v_msg      = qRiKi.getValue('qPath_v_msg'      )
+qPath_v_recept   = qRiKi.getValue('qPath_v_recept'   )
 qPath_d_ctrl     = qRiKi.getValue('qPath_d_ctrl'     )
 qPath_d_play     = qRiKi.getValue('qPath_d_play'     )
 qPath_d_prtscn   = qRiKi.getValue('qPath_d_prtscn'   )
@@ -90,6 +92,7 @@ qBusy_v_inp      = qRiKi.getValue('qBusy_v_inp'      )
 qBusy_v_QR       = qRiKi.getValue('qBusy_v_QR'       )
 qBusy_v_jpg      = qRiKi.getValue('qBusy_v_jpg'      )
 qBusy_v_CV       = qRiKi.getValue('qBusy_v_CV'       )
+qBusy_v_recept   = qRiKi.getValue('qBusy_v_recept'   )
 qBusy_d_ctrl     = qRiKi.getValue('qBusy_d_ctrl'     )
 qBusy_d_inp      = qRiKi.getValue('qBusy_d_inp'      )
 qBusy_d_QR       = qRiKi.getValue('qBusy_d_QR'       )
@@ -298,7 +301,8 @@ class proc_adintool:
 
                     # ガイド音
                     if (self.micGuide == 'on' or self.micGuide == 'sound') \
-                    or (qFunc.statusCheck(qRdy__s_force) == True):
+                    or (qFunc.statusCheck(qRdy__s_force)  == True) \
+                    or (qFunc.statusCheck(qBusy_v_recept) == True):
                         qFunc.guideSound('_ready')
 
                     if (True):
@@ -312,7 +316,8 @@ class proc_adintool:
 
                 if (adintool_gui is None) and (os.name == 'nt'):
                     if (self.micGuide == 'on') or (self.micGuide == 'display') \
-                    or (qFunc.statusCheck(qRdy__s_force) == True):
+                    or (qFunc.statusCheck(qRdy__s_force)  == True) \
+                    or (qFunc.statusCheck(qBusy_v_recept) == True):
                         adintool_gui = subprocess.Popen(['adintool-gui', '-in', 'mic', \
                                         '-rewind', adin_rewind, '-headmargin', adin_headmg, '-tailmargin', adin_tailmg, \
                                         '-lv', self.micLevel,] , \
@@ -321,7 +326,8 @@ class proc_adintool:
             # フォース 終了
             if (not adintool_gui is None):
                 if (self.micGuide != 'on') and (self.micGuide != 'display') \
-                and (qFunc.statusCheck(qRdy__s_force) != True):
+                and (qFunc.statusCheck(qRdy__s_force)  != True) \
+                and (qFunc.statusCheck(qBusy_v_recept) != True):
                     adintool_gui.terminate()
                     adintool_gui = None
 
@@ -366,7 +372,8 @@ class proc_adintool:
                 time.sleep(0.50)
                 if (sw == 'accept'):
                     if (self.micGuide == 'on') or (self.micGuide == 'sound') \
-                    or (qFunc.statusCheck(qRdy__s_force) == True):
+                    or (qFunc.statusCheck(qRdy__s_force)  == True) \
+                    or (qFunc.statusCheck(qBusy_v_recept) == True):
                         qFunc.guideSound('_accept')
 
                 # フォース 終了
@@ -385,7 +392,7 @@ class proc_adintool:
                 slow = True
 
             if (slow == True):
-                time.sleep(1.00)
+                time.sleep(0.50)
             else:
                 if (cn_r.qsize() == 0):
                     time.sleep(0.25)

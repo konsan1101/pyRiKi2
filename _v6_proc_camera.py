@@ -47,6 +47,7 @@ qPath_fonts      = qRiKi.getValue('qPath_fonts'      )
 qPath_log        = qRiKi.getValue('qPath_log'        )
 qPath_work       = qRiKi.getValue('qPath_work'       )
 qPath_rec        = qRiKi.getValue('qPath_rec'        )
+qPath_recept     = qRiKi.getValue('qPath_recept'     )
 
 qPath_s_ctrl     = qRiKi.getValue('qPath_s_ctrl'     )
 qPath_s_inp      = qRiKi.getValue('qPath_s_inp'      )
@@ -63,6 +64,7 @@ qPath_v_detect   = qRiKi.getValue('qPath_v_detect'   )
 qPath_v_cv       = qRiKi.getValue('qPath_v_cv'       )
 qPath_v_photo    = qRiKi.getValue('qPath_v_photo'    )
 qPath_v_msg      = qRiKi.getValue('qPath_v_msg'      )
+qPath_v_recept   = qRiKi.getValue('qPath_v_recept'   )
 qPath_d_ctrl     = qRiKi.getValue('qPath_d_ctrl'     )
 qPath_d_play     = qRiKi.getValue('qPath_d_play'     )
 qPath_d_prtscn   = qRiKi.getValue('qPath_d_prtscn'   )
@@ -88,6 +90,7 @@ qBusy_v_inp      = qRiKi.getValue('qBusy_v_inp'      )
 qBusy_v_QR       = qRiKi.getValue('qBusy_v_QR'       )
 qBusy_v_jpg      = qRiKi.getValue('qBusy_v_jpg'      )
 qBusy_v_CV       = qRiKi.getValue('qBusy_v_CV'       )
+qBusy_v_recept   = qRiKi.getValue('qBusy_v_recept'   )
 qBusy_d_ctrl     = qRiKi.getValue('qBusy_d_ctrl'     )
 qBusy_d_inp      = qRiKi.getValue('qBusy_d_inp'      )
 qBusy_d_QR       = qRiKi.getValue('qBusy_d_QR'       )
@@ -150,9 +153,10 @@ class proc_camera:
         self.proc_seq  = 0
 
         # 変数設定
+        self.riki_img = cv2.imread(qPath_icons + 'RiKi_base.png')
         self.blue_img = np.zeros((240,320,3), np.uint8)
         cv2.rectangle(self.blue_img,(0,0),(320,240),(255,0,0),-1)
-        cv2.putText(self.blue_img, 'No Image !', (40,80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255))
+        cv2.putText(self.blue_img, 'No Image ! (cam)', (40,80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255))
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -336,14 +340,13 @@ class proc_camera:
             #if (True):
 
                 # 画像取得
+                ret = False
                 frame = None
                 if (not capture is None):
                     ret, frame = capture.read()
-                else:
-                    ret = True
-                    frame = self.blue_img.copy()
 
-                if (ret == False):
+                if  (qFunc.statusCheck(qBusy_dev_cam) == False) \
+                and (ret == False):
                     frame = None
 
                     #qLog.log('info', self.proc_id, 'capture error!', display=self.logDisp,)
@@ -364,6 +367,24 @@ class proc_camera:
                     capture = None
                     if (not self.camDev.isdigit()):
                         capture = cv2.VideoCapture(self.camDev)
+
+                if (frame is None):
+
+                    if  (qFunc.statusCheck(qBusy_dev_cam)  == True) \
+                    and (qFunc.statusCheck(qBusy_v_recept) == True):
+                        input_img = self.riki_img.copy()
+                    else:
+                        input_img = self.blue_img.copy()
+
+                    # 結果出力
+                    out_name  = '[img]'
+                    out_value = input_img.copy()
+                    cn_s.put([out_name, out_value])
+
+                    time.sleep(0.50)
+                    frame = None
+
+
 
                 if (not frame is None):
 

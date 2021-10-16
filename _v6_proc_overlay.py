@@ -47,6 +47,7 @@ qPath_fonts      = qRiKi.getValue('qPath_fonts'      )
 qPath_log        = qRiKi.getValue('qPath_log'        )
 qPath_work       = qRiKi.getValue('qPath_work'       )
 qPath_rec        = qRiKi.getValue('qPath_rec'        )
+qPath_recept     = qRiKi.getValue('qPath_recept'     )
 
 qPath_s_ctrl     = qRiKi.getValue('qPath_s_ctrl'     )
 qPath_s_inp      = qRiKi.getValue('qPath_s_inp'      )
@@ -63,6 +64,7 @@ qPath_v_detect   = qRiKi.getValue('qPath_v_detect'   )
 qPath_v_cv       = qRiKi.getValue('qPath_v_cv'       )
 qPath_v_photo    = qRiKi.getValue('qPath_v_photo'    )
 qPath_v_msg      = qRiKi.getValue('qPath_v_msg'      )
+qPath_v_recept   = qRiKi.getValue('qPath_v_recept'   )
 qPath_d_ctrl     = qRiKi.getValue('qPath_d_ctrl'     )
 qPath_d_play     = qRiKi.getValue('qPath_d_play'     )
 qPath_d_prtscn   = qRiKi.getValue('qPath_d_prtscn'   )
@@ -88,6 +90,7 @@ qBusy_v_inp      = qRiKi.getValue('qBusy_v_inp'      )
 qBusy_v_QR       = qRiKi.getValue('qBusy_v_QR'       )
 qBusy_v_jpg      = qRiKi.getValue('qBusy_v_jpg'      )
 qBusy_v_CV       = qRiKi.getValue('qBusy_v_CV'       )
+qBusy_v_recept   = qRiKi.getValue('qBusy_v_recept'   )
 qBusy_d_ctrl     = qRiKi.getValue('qBusy_d_ctrl'     )
 qBusy_d_inp      = qRiKi.getValue('qBusy_d_inp'      )
 qBusy_d_QR       = qRiKi.getValue('qBusy_d_QR'       )
@@ -148,6 +151,7 @@ class proc_overlay:
         cv2.rectangle(self.blue_mini ,(0,0),(320,240),(255,  0,  0),-1)
         cv2.rectangle(self.black_mini,(0,0),(320,240),(  0,  0,  0),-1)
         cv2.rectangle(self.white_mini,(0,0),(320,240),(255,255,255),-1)
+        self.riki_img = cv2.imread(qPath_icons + 'RiKi_base.png')
         self.blue_img = self.blue_mini.copy()
         cv2.putText(self.blue_img, 'No Image !', (40,80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255))
         self.blue_img  = cv2.resize(self.blue_img.copy(), (self.dspWidth, self.dspHeight ))
@@ -710,7 +714,8 @@ class proc_overlay:
                 if ((time.time() - base_time) <= 10):
                     display_img = base_base.copy()
                 else:
-                    display_img = self.blue_img.copy()
+                    #display_img = self.blue_img.copy()
+                    display_img = self.riki_img.copy()
                     
                 # 左下基準
                 if (self.flag_enter != 'on') and (self.flag_cancel != 'on'):

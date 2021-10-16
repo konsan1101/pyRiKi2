@@ -26,11 +26,6 @@ import cv2
 
 
 
-# 外部プログラム
-qExt_face                = '__ext_face.bat'
-
-
-
 # 共通ルーチン
 import  _v6__qRiKi
 qRiKi = _v6__qRiKi.qRiKi_class()
@@ -52,6 +47,7 @@ qPath_fonts      = qRiKi.getValue('qPath_fonts'      )
 qPath_log        = qRiKi.getValue('qPath_log'        )
 qPath_work       = qRiKi.getValue('qPath_work'       )
 qPath_rec        = qRiKi.getValue('qPath_rec'        )
+qPath_recept     = qRiKi.getValue('qPath_recept'     )
 
 qPath_s_ctrl     = qRiKi.getValue('qPath_s_ctrl'     )
 qPath_s_inp      = qRiKi.getValue('qPath_s_inp'      )
@@ -68,6 +64,7 @@ qPath_v_detect   = qRiKi.getValue('qPath_v_detect'   )
 qPath_v_cv       = qRiKi.getValue('qPath_v_cv'       )
 qPath_v_photo    = qRiKi.getValue('qPath_v_photo'    )
 qPath_v_msg      = qRiKi.getValue('qPath_v_msg'      )
+qPath_v_recept   = qRiKi.getValue('qPath_v_recept'   )
 qPath_d_ctrl     = qRiKi.getValue('qPath_d_ctrl'     )
 qPath_d_play     = qRiKi.getValue('qPath_d_play'     )
 qPath_d_prtscn   = qRiKi.getValue('qPath_d_prtscn'   )
@@ -93,6 +90,7 @@ qBusy_v_inp      = qRiKi.getValue('qBusy_v_inp'      )
 qBusy_v_QR       = qRiKi.getValue('qBusy_v_QR'       )
 qBusy_v_jpg      = qRiKi.getValue('qBusy_v_jpg'      )
 qBusy_v_CV       = qRiKi.getValue('qBusy_v_CV'       )
+qBusy_v_recept   = qRiKi.getValue('qBusy_v_recept'   )
 qBusy_d_ctrl     = qRiKi.getValue('qBusy_d_ctrl'     )
 qBusy_d_inp      = qRiKi.getValue('qBusy_d_inp'      )
 qBusy_d_QR       = qRiKi.getValue('qBusy_d_QR'       )
@@ -224,9 +222,6 @@ class proc_cvdetect:
         # 初期設定
         self.proc_step = '1'
 
-        last_face      = time.time() - 60
-        last_pingpong  = time.time() - 60
-
         # 待機ループ
         self.proc_step = '5'
 
@@ -346,27 +341,16 @@ class proc_cvdetect:
                                 fn0 = stamp + '.' + self.cas_nm + '.jpg'
                                 fn1 = qPath_rec      + fn0
                                 fn2 = qPath_v_detect + fn0
-                                if (not os.path.exists(fn1)) and (not os.path.exists(fn2)):
+                                fn3 = qPath_v_recept + fn0
+                                if  (not os.path.exists(fn1)) \
+                                and (not os.path.exists(fn2)) \
+                                and (not os.path.exists(fn3)):
                                     try:
+
                                         cv2.imwrite(fn1, hit_img)
                                         cv2.imwrite(fn2, hit_img)
-
                                         if (self.cas_nm == 'face'):
-
-                                            if (self.runMode == 'debug') \
-                                            or (self.runMode == 'reception'):
-                                                if (os.name == 'nt'):
-
-                                                    # 外部プログラム
-                                                    if ((time.time() - last_face) > 0):
-                                                        last_face = time.time()
-                                                        snd = '_null'
-                                                        if ((time.time() - last_pingpong) > 60):
-                                                            last_pingpong = time.time()
-                                                            snd = '_pingpong'
-                                                        if (os.path.exists(qExt_face)):
-                                                            ext_face = subprocess.Popen([qExt_face, qPath_rec, fn0, snd, ], )
-                                                                    #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+                                            cv2.imwrite(fn3, hit_img)
 
                                     except Exception as e:
                                         pass

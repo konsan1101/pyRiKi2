@@ -82,6 +82,7 @@ qPath_fonts      = qRiKi.getValue('qPath_fonts'      )
 qPath_log        = qRiKi.getValue('qPath_log'        )
 qPath_work       = qRiKi.getValue('qPath_work'       )
 qPath_rec        = qRiKi.getValue('qPath_rec'        )
+qPath_recept     = qRiKi.getValue('qPath_recept'     )
 
 qPath_s_ctrl     = qRiKi.getValue('qPath_s_ctrl'     )
 qPath_s_inp      = qRiKi.getValue('qPath_s_inp'      )
@@ -98,6 +99,7 @@ qPath_v_detect   = qRiKi.getValue('qPath_v_detect'   )
 qPath_v_cv       = qRiKi.getValue('qPath_v_cv'       )
 qPath_v_photo    = qRiKi.getValue('qPath_v_photo'    )
 qPath_v_msg      = qRiKi.getValue('qPath_v_msg'      )
+qPath_v_recept   = qRiKi.getValue('qPath_v_recept'   )
 qPath_d_ctrl     = qRiKi.getValue('qPath_d_ctrl'     )
 qPath_d_play     = qRiKi.getValue('qPath_d_play'     )
 qPath_d_prtscn   = qRiKi.getValue('qPath_d_prtscn'   )
@@ -123,6 +125,7 @@ qBusy_v_inp      = qRiKi.getValue('qBusy_v_inp'      )
 qBusy_v_QR       = qRiKi.getValue('qBusy_v_QR'       )
 qBusy_v_jpg      = qRiKi.getValue('qBusy_v_jpg'      )
 qBusy_v_CV       = qRiKi.getValue('qBusy_v_CV'       )
+qBusy_v_recept   = qRiKi.getValue('qBusy_v_recept'   )
 qBusy_d_ctrl     = qRiKi.getValue('qBusy_d_ctrl'     )
 qBusy_d_inp      = qRiKi.getValue('qBusy_d_inp'      )
 qBusy_d_QR       = qRiKi.getValue('qBusy_d_QR'       )
@@ -151,6 +154,7 @@ import _v6_proc_cv2dnn_yolo
 import _v6_proc_cv2dnn_ssd
 import _v6_proc_vin2jpg
 import _v6_proc_coreCV
+import _v6_proc_reception
 
 
 
@@ -361,6 +365,8 @@ class main_vision:
         vin2jpg_switch       = 'on'
         coreCV_thread        = None
         coreCV_switch        = 'on'
+        reception_thread     = None
+        reception_switch     = 'off'
 
         if (self.runMode == 'debug'):
             camera_switch2     = 'on'
@@ -372,6 +378,7 @@ class main_vision:
             cv2dnn_ssd_switch  = 'on'
             vin2jpg_switch     = 'on'
             coreCV_switch      = 'on'
+            reception_switch   = 'off'
         elif (self.runMode == 'hud'):
             camera_switch2     = 'off'
             txt2img_switch     = 'on'
@@ -382,6 +389,7 @@ class main_vision:
             cv2dnn_ssd_switch  = 'off'
             vin2jpg_switch     = 'off'
             coreCV_switch      = 'off'
+            reception_switch   = 'off'
         elif (self.runMode == 'live'):
             camera_switch2     = 'on'
             txt2img_switch     = 'on'
@@ -395,6 +403,7 @@ class main_vision:
                 cv2dnn_ssd_switch   = 'on'
             vin2jpg_switch     = 'on'
             coreCV_switch      = 'on'
+            reception_switch   = 'off'
         elif (self.runMode == 'camera') or (self.runMode == 'mirror'):
             camera_switch2     = 'off'
             txt2img_switch     = 'on'
@@ -405,6 +414,7 @@ class main_vision:
             cv2dnn_ssd_switch  = 'off'
             vin2jpg_switch     = 'off'
             coreCV_switch      = 'off'
+            reception_switch   = 'off'
         elif (self.runMode == 'assistant'):
             run_priority       = 'below' # 通常以下
             camera_switch2     = 'off'
@@ -416,6 +426,7 @@ class main_vision:
             cv2dnn_ssd_switch  = 'off'
             vin2jpg_switch     = 'off'
             coreCV_switch      = 'off'
+            reception_switch   = 'off'
         elif (self.runMode == 'reception'):
             camera_switch2     = 'off'
             txt2img_switch     = 'on'
@@ -426,6 +437,7 @@ class main_vision:
             cv2dnn_ssd_switch  = 'off'
             vin2jpg_switch     = 'off'
             coreCV_switch      = 'off'
+            reception_switch   = 'on'
 
         if (self.cam2Dev == 'none'):
             camera_switch2     = 'off'
@@ -756,6 +768,31 @@ class main_vision:
                 del coreCV_thread
                 coreCV_thread = None
 
+
+
+
+            if (reception_thread is None) and (reception_switch == 'on'):
+                cn_s.put(['_guide_', 'recept control start!'])
+
+                reception_thread = _v6_proc_reception.proc_reception(
+                                    name='reception', id='0',
+                                    runMode=self.runMode,
+                                    camDev=self.cam1Dev,
+                                    )
+                reception_thread.begin()
+                time.sleep(1.00)
+
+                if (self.runMode == 'debug') \
+                or (self.runMode == 'live'):
+                    speechs.append({ 'text':u'「受付監視」の機能が有効になりました。', 'wait':0, })
+
+            if (not reception_thread is None) and (reception_switch != 'on'):
+                reception_thread.abort()
+                del reception_thread
+                reception_thread = None
+
+
+
             if (len(speechs) != 0):
                 qRiKi.speech(id=self.proc_id, speechs=speechs, lang='', )
 
@@ -997,6 +1034,10 @@ class main_vision:
                         if (res_name == '[bgsegm_img]'):
                             bgsegm_img = res_value.copy()
 
+                            # 受付機能
+                            #if (not reception_thread is None):
+                            #    reception_thread.put(['[img]', bgsegm_img ])
+
                             # 画像合成（メイン画像）
                             overlay_thread.put(['[cam1]', bgsegm_img ])
                             break
@@ -1155,6 +1196,10 @@ class main_vision:
                 # ＡＩ画像認識（クラウド処理）
                 if (not coreCV_thread is None):
                     res_data  = coreCV_thread.get()
+
+                # 受付機能
+                if (not reception_thread is None):
+                    res_data  = reception_thread.get()
 
                 # 文字→画像変換
                 if (not txt2img_thread is None):
@@ -1318,6 +1363,11 @@ class main_vision:
                 coreCV_thread.abort()
                 del coreCV_thread
                 coreCV_thread = None
+
+            if (not reception_thread is None):
+                reception_thread.abort()
+                del reception_thread
+                reception_thread = None
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -1704,12 +1754,14 @@ if __name__ == '__main__':
         qFunc.makeDirs(qPath_log,          15 )
         qFunc.makeDirs(qPath_work,         15 )
         qFunc.makeDirs(qPath_rec,          15 )
+        qFunc.makeDirs(qPath_recept,       15 )
 
         qFunc.makeDirs(qPath_v_ctrl,   True   )
         qFunc.makeDirs(qPath_v_inp,    True   )
         qFunc.makeDirs(qPath_v_jpg,    True   )
         qFunc.makeDirs(qPath_v_detect, True   )
         qFunc.makeDirs(qPath_v_cv,     True   )
+        qFunc.makeDirs(qPath_v_recept, True   )
         qFunc.makeDirs(qPath_v_photo,  True   )
         qFunc.makeDirs(qPath_v_msg,    True   )
         qFunc.makeDirs(qPath_d_prtscn, True   )
