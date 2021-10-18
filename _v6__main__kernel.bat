@@ -105,14 +105,14 @@ ECHO python _v6__destroy.py faster
      python _v6__destroy.py faster
 
 ECHO;
-rem      -----------------------------------------------------------------------------------InpTrnTxtOutCam1..
-rem ECHO start "" python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://repair-fujitsu:5555/MotionJpeg?w=1920&h=1080"
-rem      start "" python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://repair-fujitsu:5555/MotionJpeg?w=1920&h=1080"
-rem ECHO start "" python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://192.168.86.73:5555/MotionJpeg?w=1920&h=1080"
-rem      start "" python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://192.168.86.73:5555/MotionJpeg?w=1920&h=1080"
-    ECHO start "" python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en
-         start "" python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en
-rem      -----------------------------------------------------------------------------------InpTrnTxtOutCam1..
+rem      --------------------------------------------------------------------------------------------InpTrnTxtOutCam1..
+rem ECHO start "RiKi" /min python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://repair-fujitsu:5555/MotionJpeg?w=640&h=480"
+rem      start "RiKi" /min python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://repair-fujitsu:5555/MotionJpeg?w=640&h=480"
+rem ECHO start "RiKi" /min python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://192.168.86.73:5555/MotionJpeg?w=640&h=480"
+rem      start "RiKi" /min python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en "http://192.168.86.73:5555/MotionJpeg?w=640&h=480"
+    ECHO start "RiKi" /min python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en
+         start "RiKi" /min python _v6__main__kernel.py %mode% 0 %dev% %guide% 0 %apii% %apit% %apio% ja en ja en
+rem      --------------------------------------------------------------------------------------------InpTrnTxtOutCam1..
 
 IF %mode%@==reception@   GOTO RECEPTION
 GOTO RECEPTIONPASS
