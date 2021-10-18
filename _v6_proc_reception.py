@@ -462,13 +462,14 @@ class proc_reception:
             # 外部プログラム
             if ((time.time() - self.last_extface) > 0):
                 self.last_extface = time.time()
-                sound = '_null'
-                if ((time.time() - self.last_pingpong) > 60):
-                    self.last_pingpong = time.time()
-                    sound = '_pingpong'
                 if (os.path.exists(qExt_face)):
-                    ext_face = subprocess.Popen([qExt_face, qPath_work, file_name, sound, ], )
+                    ext_face = subprocess.Popen([qExt_face, qPath_work, file_name, 'null', ], )
                                #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
+
+            # ピンポン音
+            if ((time.time() - self.last_pingpong) > 60):
+                self.last_pingpong = time.time()
+                qFunc.guideSound(filename='_pingpong', sync=False)
 
         out_name  = '[img_file]'
         out_value = [proc_file]

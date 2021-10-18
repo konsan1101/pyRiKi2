@@ -65,7 +65,7 @@ if __name__ == '__main__':
     # パラメータ
     imgPath = '_icons/'
     imgFile = 'detect_face.png'
-    snd     = '_pingpong'
+    parm3   = 'null'
 
     if (len(sys.argv) >= 2):
         imgPath = str(sys.argv[1])
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     if (len(sys.argv) >= 3):
         imgFile  = str(sys.argv[2])
     if (len(sys.argv) >= 4):
-        snd      = str(sys.argv[3])
+        parm3    = str(sys.argv[3])
 
     # 全画面表示中でなければ認識結果表示
     if (os.path.exists('temp/_work/busy_dev_display.txt')):
@@ -89,10 +89,6 @@ if __name__ == '__main__':
         time.sleep(0.25)
         qGuide.setMessage(txt='detect', )
 
-        # ピンポン再生
-        if (snd != '_null'):
-            guideSound(filename=snd, sync=False)
-
         # 待機
         chkTime = time.time()
         while ((time.time() - chkTime) < 5):
@@ -104,14 +100,9 @@ if __name__ == '__main__':
         qGuide.close()
         qGuide.terminate()
 
-    # 以外はピンポン再生のみ
+    # 以外は何もしない
     else:
-
-        # ピンポン再生
-        if (snd != '_null'):
-            guideSound(filename=snd, sync=True)
-
         # 待機
-        time.sleep(2.00)
+        time.sleep(5.00)
 
 
