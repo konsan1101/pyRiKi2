@@ -704,18 +704,20 @@ class qFunc_class:
         if   (reso == 'full+'):
             return self.qScreenWidth + 90, self.qScreenHeight + 50
         if   (reso == 'full-'):
-            return int(self.qScreenWidth*0.8), int(self.qScreenHeight*0.8)
+            return int(self.qScreenWidth*0.9), int(self.qScreenHeight*0.9)
         elif (reso == 'half'):
             return int(self.qScreenWidth/2), int(self.qScreenHeight/2)
 
         elif (reso=='4k'):
-                return 4096,2160
-        elif (reso=='2k'):
-                return 2048,1080
-        elif (reso=='hdtv') or (reso=='1920x1080'):
+                return 3840,2160
+        elif (reso=='2k') or (reso=='hdtv'):
+                return 1920,1080
+        elif (reso=='fhd') or (reso=='1920x1080'):
                 return 1920,1080
         elif (reso=='uxga'):
                 return 1600,1200
+        elif (reso=='hd') or (reso=='1366x768'):
+                return 1366,768
         elif (reso=='720p') or (reso=='1280x720'):
                 return 1280,720
         elif (reso=='xga') or (reso=='1024x768'):

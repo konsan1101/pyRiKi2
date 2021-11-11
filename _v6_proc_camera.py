@@ -224,7 +224,10 @@ class proc_camera:
         # デバイス設定
         capture = None
         if (not self.camDev.isdigit()):
-            capture = cv2.VideoCapture(self.camDev)
+            try:
+                capture = cv2.VideoCapture(self.camDev)
+            except Exception as e:
+                capture = None
 
         # 受付監視機能（差分検出）
         bgsegm_model = None
@@ -272,34 +275,42 @@ class proc_camera:
                             if (qHOSTNAME == 'kondou-s10'):
                                 dev = '1'
 
-                        if (os.name != 'nt'):
-                            capture = cv2.VideoCapture(int(dev))
-                        else:
-                            capture = cv2.VideoCapture(int(dev), cv2.CAP_DSHOW)
                         try:
+                            if (os.name != 'nt'):
+                                capture = cv2.VideoCapture(int(dev))
+                            else:
+                                capture = cv2.VideoCapture(int(dev), cv2.CAP_DSHOW)
+                        except Exception as e:
+                            capture = None
+
+                        if (not capture is None):
                             try:
-                                capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
+                                try:
+                                    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
+                                except Exception as e:
+                                    pass
+                                if (int(self.camWidth ) != 0):
+                                    capture.set(cv2.CAP_PROP_FRAME_WIDTH,  int(self.camWidth ))
+                                if (int(self.camHeight) != 0):
+                                    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(self.camHeight))
+                                if (int(self.camFps) != 0):
+                                    capture.set(cv2.CAP_PROP_FPS,          int(self.camFps   ))
                             except Exception as e:
                                 pass
-                            if (int(self.camWidth ) != 0):
-                                capture.set(cv2.CAP_PROP_FRAME_WIDTH,  int(self.camWidth ))
-                            if (int(self.camHeight) != 0):
-                                capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(self.camHeight))
-                            if (int(self.camFps) != 0):
-                                capture.set(cv2.CAP_PROP_FPS,          int(self.camFps   ))
-                        except Exception as e:
-                            pass
 
-                        # ビジー設定 (ready)
-                        if (qFunc.statusCheck(self.fileBsy) == False):
-                            qFunc.statusSet(self.fileBsy, True)
-                            if (str(self.id) == '0'):
-                                qFunc.statusSet(qBusy_v_inp, True)
+                            # ビジー設定 (ready)
+                            if (qFunc.statusCheck(self.fileBsy) == False):
+                                qFunc.statusSet(self.fileBsy, True)
+                                if (str(self.id) == '0'):
+                                    qFunc.statusSet(qBusy_v_inp, True)
 
                 if  (not capture is None):
                     if ((qFunc.statusCheck(qBusy_dev_cam) == True) \
                     and (qFunc.statusCheck(qRdy__v_sendkey) == False)):
-                        capture.release()
+                        try:
+                            capture.release()
+                        except Exception as e:
+                            pass
                         capture = None
 
                         # ビジー解除 (!ready)
@@ -343,7 +354,11 @@ class proc_camera:
                 ret = False
                 frame = None
                 if (not capture is None):
-                    ret, frame = capture.read()
+                    try:
+                        ret, frame = capture.read()
+                    except Exception as e:
+                        ret = False
+                        frame = None
 
                 if  (qFunc.statusCheck(qBusy_dev_cam) == False) \
                 and (ret == False):
@@ -358,15 +373,21 @@ class proc_camera:
  
                     # デバイス開放
                     if (not capture is None): 
-                        capture.release()
+                        try:
+                            capture.release()
+                        except Exception as e:
+                            pass
                         capture = None
 
-                    time.sleep(5.00)
+                    time.sleep(1.00)
 
                     # デバイス設定
                     capture = None
                     if (not self.camDev.isdigit()):
-                        capture = cv2.VideoCapture(self.camDev)
+                        try:
+                            capture = cv2.VideoCapture(self.camDev)
+                        except Exception as e:
+                            capture = None
 
                 if (frame is None):
 
@@ -627,7 +648,10 @@ class proc_camera:
 
             # デバイス開放
             if (not capture is None): 
-                capture.release()
+                try:
+                    capture.release()
+                except Exception as e:
+                    pass
                 capture = None
 
             # ビジー解除 (!ready)
@@ -672,8 +696,8 @@ if __name__ == '__main__':
     runMode='reception'
     #camDev='0'
     #camDev='http://192.168.200.251/nphMotionJpeg?Resolution=640x480'
-    #camDev='http://192.168.86.73:5555/MotionJpeg?w=640&h=480'
-    camDev='http://localhost:5555/MotionJpeg?w=640&h=480'
+    camDev='http://kondou-note:5555/MotionJpeg?w=640&h=480'
+    #camDev='http://localhost:5555/MotionJpeg?w=640&h=480'
     camera_thread = proc_camera(name='camera', id='0', runMode=runMode, 
                     camDev=camDev, camMode='vga', camStretch='0', camRotate='0', camZoom='1.0', camFps='5',)
     camera_thread.begin()
@@ -684,7 +708,7 @@ if __name__ == '__main__':
     chktime = time.time()
     limit_sec = 15
     if (camDev != '0'):
-        limit_sec = 3600
+        limit_sec = 600
     while ((time.time() - chktime) < limit_sec):
 
         res_data  = camera_thread.get()

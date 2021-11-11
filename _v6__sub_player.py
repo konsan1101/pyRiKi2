@@ -133,30 +133,39 @@ config_file = '_v6__sub_player_key.json'
 qRiKi_key = _v6__qRiKi_key.qRiKi_key_class()
 res, dic = qRiKi_key.getCryptJson(config_file=config_file, auto_crypt=False, )
 if (res == False):
-    dic['_crypt_']    = 'none'
-    dic['engine']     = 'ffplay'
-    dic['path_winos'] = 'C:/Users/Public/'
-    dic['path_macos'] = '/Users/Shared/'
-    dic['path_linux'] = '/users/kondou/Documents/'
-    dic['folder_00']  = '_動画_AppleTV'
-    dic['folder_01']  = '_m4v__Clip/Perfume'
-    dic['folder_02']  = '_m4v__Clip/BABYMETAL'
-    dic['folder_03']  = '_m4v__Clip/OneOkRock'
-    dic['folder_04']  = '_m4v__Clip/きゃりーぱみゅぱみゅ'
-    dic['folder_05']  = '_m4v__Clip/etc'
-    dic['folder_06']  = '_m4v__Clip/SekaiNoOwari'
-    dic['folder_07']  = '_動画_AppleTV'
-    dic['folder_08']  = '_m4v__Clip/Perfume'
-    dic['folder_09']  = '_m4v__Clip/BABYMETAL'
+    dic['_crypt_']        = 'none'
+    dic['engine']         = 'ffplay'
+    dic['path_winos']     = 'C:/Users/Public/'
+    dic['path_macos']     = '/Users/Shared/'
+    dic['path_linux']     = '/users/kondou/Documents/'
+    dic['play_folder_00'] = '_動画_AppleTV'
+    dic['play_folder_01'] = '_m4v__Clip/Perfume'
+    dic['play_folder_02'] = '_m4v__Clip/BABYMETAL'
+    dic['play_folder_03'] = '_m4v__Clip/OneOkRock'
+    dic['play_folder_04'] = '_m4v__Clip/きゃりーぱみゅぱみゅ'
+    dic['play_folder_05'] = '_m4v__Clip/etc'
+    dic['play_folder_06'] = '_m4v__Clip/SekaiNoOwari'
+    dic['play_folder_07'] = '_動画_AppleTV'
+    dic['play_folder_08'] = '_m4v__Clip/Perfume'
+    dic['play_folder_09'] = '_m4v__Clip/BABYMETAL'
+    dic['play_volume']    = 100
+    dic['bgm_changeSec']  = 3000
+    dic['bgm_folder']     = 'BGM'
+    dic['bgm_volume']     = 30
+    dic['bgv_changeSec']  = 0
+    dic['bgv_folder']     = '_動画_AppleTV'
+    dic['bgv_volume']     = 0
     res = qRiKi_key.putCryptJson(config_file=config_file, put_dic=dic, )
 
 
 
-runMode = 'debug'
+#runMode = 'debug'
+runMode = 'bgm'
+#runMode = 'bgv'
 
 
 
-def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, width=320, height=240, fps=5, overText=''):
+def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, width=320, height=240, fps=5, overText='', limitSec=0):
 
     #ffplay -i test_input.flv -volume 100 -window_title "test_input.flv" -noborder -autoexit -x 320 -y 240
     #ffplay -i test_input.flv -volume 100 -window_title "test_input.flv" -noborder -autoexit -fs
@@ -223,7 +232,22 @@ def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, w
             if (width != 0) or (height != 0):
                 ctypes.windll.user32.SetWindowPos(hwnd,z_order,int(left),int(top),0,0,1)
 
-    ffplay.wait()
+    if (file[-4:].lower() == '.wav') \
+    or (file[-4:].lower() == '.mp3') \
+    or (file[-4:].lower() == '.m4a') \
+    or (file[-4:].lower() == '.mp4') \
+    or (file[-4:].lower() == '.m4v') \
+    or (file[-4:].lower() == '.mov'):
+        if (int(limitSec) == 0):
+            ffplay.wait()
+        else:
+            #ffplay.wait(timeout=int(limitSec))
+            checkTime = time.time()
+            while (ffplay.poll() is None) and ((time.time() - checkTime) <= int(limitSec)):
+                time.sleep(0.50)
+    else:
+            time.sleep(1.00)
+            #ffplay.wait()
     ffplay.terminate()
     ffplay = None
 
@@ -231,7 +255,7 @@ def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, w
 
 
 
-def panelPlay(panel, path, vol, order, loop, overtext):
+def panelPlay(panel, path, vol, order, loop, overtext, limitSec):
 
     count = 0
     while (loop > 0):
@@ -254,7 +278,7 @@ def panelPlay(panel, path, vol, order, loop, overtext):
                     p = '5+'
 
             left, top, width, height = qFunc.getPanelPos(p,)
-            res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext)
+            res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext, limitSec)
             count += 1
 
             txts, txt = qFunc.txtsRead(qCtrl_control_self)
@@ -292,7 +316,7 @@ def panelPlay(panel, path, vol, order, loop, overtext):
                         p = '5+'
 
                 left, top, width, height = qFunc.getPanelPos(p,)
-                res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext)
+                res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext, limitSec)
                 count += 1
 
                 txts, txt = qFunc.txtsRead(qCtrl_control_self)
@@ -342,37 +366,72 @@ class main_player:
 
         # 構成情報
         json_file = '_v6__sub_player_key.json'
-        self.engine       = 'ffplay'
-        self.path_winos   = 'C:/Users/Public/'
-        self.path_macos   = '/Users/Shared/'
-        self.path_linux   = '/users/kondou/Documents/'
-        self.folder       = {}
-        self.folder['00'] = '_動画_AppleTV'
-        self.folder['01'] = '_m4v__Clip/Perfume'
-        self.folder['02'] = '_m4v__Clip/BABYMETAL'
-        self.folder['03'] = '_m4v__Clip/OneOkRock'
-        self.folder['04'] = '_m4v__Clip/きゃりーぱみゅぱみゅ'
-        self.folder['05'] = '_m4v__Clip/etc'
-        self.folder['06'] = '_m4v__Clip/SekaiNoOwari'
-        self.folder['07'] = '_m4v__Clip/GB'
-        self.folder['08'] = '_m4v__Clip/Perfume'
-        self.folder['09'] = '_m4v__Clip/BABYMETAL'
+        self.engine            = 'ffplay'
+        self.path_winos        = 'C:/Users/Public/'
+        self.path_macos        = '/Users/Shared/'
+        self.path_linux        = '/users/kondou/Documents/'
+        self.play_folder       = {}
+        self.play_folder['00'] = '_動画_AppleTV'
+        self.play_folder['01'] = '_m4v__Clip/Perfume'
+        self.play_folder['02'] = '_m4v__Clip/BABYMETAL'
+        self.play_folder['03'] = '_m4v__Clip/OneOkRock'
+        self.play_folder['04'] = '_m4v__Clip/きゃりーぱみゅぱみゅ'
+        self.play_folder['05'] = '_m4v__Clip/etc'
+        self.play_folder['06'] = '_m4v__Clip/SekaiNoOwari'
+        self.play_folder['07'] = '_m4v__Clip/GB'
+        self.play_folder['08'] = '_m4v__Clip/Perfume'
+        self.play_folder['09'] = '_m4v__Clip/BABYMETAL'
+        self.play_volume       = 100
+        self.bgm_changeSec     = 3000
+        self.bgm_folder        = 'BGM'
+        self.bgm_volume        = 30
+        self.bgv_changeSec     = 0
+        self.bgv_folder        = '_動画_AppleTV'
+        self.bgv_volume        = 0
         res, json_dic = qRiKi_key.getCryptJson(config_file=json_file, auto_crypt=False, )
         if (res == True):
-            self.engine       = json_dic['engine']
-            self.path_winos   = json_dic['path_winos']
-            self.path_macos   = json_dic['path_macos']
-            self.path_linux   = json_dic['path_linux']
-            self.folder['00'] = json_dic['folder_00']
-            self.folder['01'] = json_dic['folder_01']
-            self.folder['02'] = json_dic['folder_02']
-            self.folder['03'] = json_dic['folder_03']
-            self.folder['04'] = json_dic['folder_04']
-            self.folder['05'] = json_dic['folder_05']
-            self.folder['06'] = json_dic['folder_06']
-            self.folder['07'] = json_dic['folder_07']
-            self.folder['08'] = json_dic['folder_08']
-            self.folder['09'] = json_dic['folder_09']
+            self.engine            = json_dic['engine']
+            self.path_winos        = json_dic['path_winos']
+            self.path_macos        = json_dic['path_macos']
+            self.path_linux        = json_dic['path_linux']
+            self.play_folder['00'] = json_dic['play_folder_00']
+            self.play_folder['01'] = json_dic['play_folder_01']
+            self.play_folder['02'] = json_dic['play_folder_02']
+            self.play_folder['03'] = json_dic['play_folder_03']
+            self.play_folder['04'] = json_dic['play_folder_04']
+            self.play_folder['05'] = json_dic['play_folder_05']
+            self.play_folder['06'] = json_dic['play_folder_06']
+            self.play_folder['07'] = json_dic['play_folder_07']
+            self.play_folder['08'] = json_dic['play_folder_08']
+            self.play_folder['09'] = json_dic['play_folder_09']
+            self.play_volume       = json_dic['play_volume']
+            self.bgm_changeSec     = json_dic['bgm_changeSec']
+            self.bgm_folder        = json_dic['bgm_folder']
+            self.bgm_volume        = json_dic['bgm_volume']
+            self.bgv_changeSec     = json_dic['bgv_changeSec']
+            self.bgv_folder        = json_dic['bgv_folder']
+            self.bgv_volume        = json_dic['bgv_volume']
+
+        self.path_play = {}
+        for id in self.play_folder:
+            if (os.name == 'nt'):
+                self.path_play[id] = self.path_winos + self.play_folder[id]
+            elif (qPLATFORM == 'darwin'):
+                self.path_play[id] = self.path_macos + self.play_folder[id]
+            else:
+                self.path_play[id] = self.path_linux + self.play_folder[id]
+
+        self.path_bgm = ''
+        self.path_bgv = ''
+        if (os.name == 'nt'):
+            self.path_bgm = self.path_winos + self.bgm_folder
+            self.path_bgv = self.path_winos + self.bgv_folder
+        elif (qPLATFORM == 'darwin'):
+            self.path_bgm = self.path_macos + self.bgm_folder
+            self.path_bgv = self.path_macos + self.bgv_folder
+        else:
+            self.path_bgm = self.path_linux + self.bgm_folder
+            self.path_bgv = self.path_linux + self.bgv_folder
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -550,8 +609,10 @@ class main_player:
 
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-            if (str(self.id) == '0'):
-                qFunc.statusSet(qBusy_d_play, False)
+            if  (self.runMode != 'bgm') \
+            and (self.runMode != 'bgv'):
+                if (str(self.id) == '0'):
+                    qFunc.statusSet(qBusy_d_play, False)
 
             # キュー削除
             while (cn_r.qsize() > 0):
@@ -570,16 +631,6 @@ class main_player:
 
     # 処理
     def sub_proc(self, proc_text, ):
-        path = {}
-
-        for id in self.folder:
-            if (os.name == 'nt'):
-                path[id] = self.path_winos + self.folder[id]
-            elif (qPLATFORM == 'darwin'):
-                path[id] = self.path_macos + self.folder[id]
-            else:
-                path[id] = self.path_linux + self.folder[id]
-
         if (proc_text.find(u'リセット') >=0):
             #self.sub_stop(proc_text, )
             self.sub_stop('_stop_', )
@@ -593,47 +644,55 @@ class main_player:
 
         elif (proc_text.lower() == '_demo0-'):
             #self.sub_stop('_stop_', )
-            self.sub_start(path['01'], panel='0' , vol=0  , order='normal', loop=1, )
-            self.sub_start(path['01'], panel='0-', vol=100, order='top'   , loop=1, )
+            self.sub_start(self.path_play['01'], panel='0' , vol=0  , order='normal', loop=1, limitSec=0, )
+            self.sub_start(self.path_play['01'], panel='0-', vol=int(self.play_volume), order='top'   , loop=1, limitSec=0, )
 
         elif (proc_text.lower() == '_demo1397'):
             #self.sub_stop('_stop_', )
-            self.sub_start(path['00'], panel='0'   , vol=0  , order='normal', loop=99, )
-            self.sub_start(path['01'], panel='1397', vol=100, order='top'   , loop=99, )
+            self.sub_start(self.path_play['00'], panel='0'   , vol=0  , order='normal', loop=99, limitSec=0, )
+            self.sub_start(self.path_play['01'], panel='1397', vol=int(self.play_volume), order='top'   , loop=99, limitSec=0, )
 
         elif (proc_text.lower() == '_demo1234'):
             #self.sub_stop('_stop_', )
-            self.sub_start(path['05'], panel='0' , vol=100, order='normal', loop=99, )
-            self.sub_start(path['01'], panel='19', vol=0  , order='normal', loop=99, )
-            self.sub_start(path['02'], panel='28', vol=0  , order='normal', loop=99, )
-            self.sub_start(path['03'], panel='37', vol=0  , order='normal', loop=99, )
-            self.sub_start(path['04'], panel='46', vol=0  , order='normal', loop=99, )
+            self.sub_start(self.path_play['05'], panel='0' , vol=int(self.play_volume), order='normal', loop=99, limitSec=0, )
+            self.sub_start(self.path_play['01'], panel='19', vol=0  , order='normal', loop=99, limitSec=0, )
+            self.sub_start(self.path_play['02'], panel='28', vol=0  , order='normal', loop=99, limitSec=0, )
+            self.sub_start(self.path_play['03'], panel='37', vol=0  , order='normal', loop=99, limitSec=0, )
+            self.sub_start(self.path_play['04'], panel='46', vol=0  , order='normal', loop=99, limitSec=0, )
+
+        elif (proc_text.lower() == '_bgm_'):
+            #self.sub_stop('_stop_', )
+            self.sub_start(self.path_bgm, panel='9' , vol=int(self.bgm_volume), order='normal', loop=99, limitSec=int(self.bgm_changeSec), )
+
+        elif (proc_text.lower() == '_bgv_'):
+            #self.sub_stop('_stop_', )
+            self.sub_start(self.path_bgv, panel='0' , vol=int(self.bgv_volume), order='normal', loop=99, limitSec=int(self.bgv_changeSec), )
 
         elif ((proc_text.find(u'動画') >=0) and (proc_text.find(u'メニュー') >=0)) or (proc_text.lower() == '_test_'):
             #self.sub_stop('_stop_', )
-            self.sub_start(path['00'], panel='0' , vol=0  , order='normal', loop=99, overtext='', )
-            self.sub_start(path['01'], panel='1-', vol=0  , order='normal', loop=99, overtext='01', )
-            self.sub_start(path['02'], panel='2-', vol=0  , order='normal', loop=99, overtext='02', )
-            self.sub_start(path['03'], panel='3-', vol=0  , order='normal', loop=99, overtext='03', )
-            self.sub_start(path['04'], panel='4-', vol=0  , order='normal', loop=99, overtext='04', )
+            self.sub_start(self.path_play['00'], panel='0' , vol=0  , order='normal', loop=99, overtext='', limitSec=0, )
+            self.sub_start(self.path_play['01'], panel='1-', vol=0  , order='normal', loop=99, overtext='01', limitSec=0, )
+            self.sub_start(self.path_play['02'], panel='2-', vol=0  , order='normal', loop=99, overtext='02', limitSec=0, )
+            self.sub_start(self.path_play['03'], panel='3-', vol=0  , order='normal', loop=99, overtext='03', limitSec=0, )
+            self.sub_start(self.path_play['04'], panel='4-', vol=0  , order='normal', loop=99, overtext='04', limitSec=0, )
             if (proc_text.find(u'動画') >=0) and (proc_text.find(u'メニュー') >=0):
-                self.sub_start(path['05'], panel='5-', vol=0  , order='normal', loop=99, overtext='05', )
+                self.sub_start(self.path_play['05'], panel='5-', vol=0  , order='normal', loop=99, overtext='05', limitSec=0, )
             if (proc_text.lower() == '_test_'):
-                self.sub_start(path['05'], panel='5-', vol=100, order='top'   , loop=99, overtext='05', )
-            self.sub_start(path['06'], panel='6-', vol=0  , order='normal', loop=99, overtext='06', )
-            self.sub_start(path['07'], panel='7-', vol=0  , order='normal', loop=99, overtext='07', )
-            self.sub_start(path['08'], panel='8-', vol=0  , order='normal', loop=99, overtext='08', )
-            self.sub_start(path['09'], panel='9-', vol=0  , order='normal', loop=99, overtext='09', )
+                self.sub_start(self.path_play['05'], panel='5-', vol=int(self.play_volume), order='top'   , loop=99, overtext='05', limitSec=0, )
+            self.sub_start(self.path_play['06'], panel='6-', vol=0  , order='normal', loop=99, overtext='06', limitSec=0, )
+            self.sub_start(self.path_play['07'], panel='7-', vol=0  , order='normal', loop=99, overtext='07', limitSec=0, )
+            self.sub_start(self.path_play['08'], panel='8-', vol=0  , order='normal', loop=99, overtext='08', limitSec=0, )
+            self.sub_start(self.path_play['09'], panel='9-', vol=0  , order='normal', loop=99, overtext='09', limitSec=0, )
 
         elif (proc_text.lower() >= '01') and (proc_text.lower() <= '09'):
             #self.sub_stop('_stop_', )
-            self.sub_start(path[proc_text], panel='0-', vol=100, order='top' , loop=99, )
+            self.sub_start(self.path_play[proc_text], panel='0-', vol=int(self.play_volume), order='top' , loop=99, limitSec=0, )
 
         else:
             proc_path = qFunc.txtFilePath(proc_text)
             if (proc_path != False):
                 #self.sub_stop('_stop_', )
-                self.sub_start(proc_path, panel='0-', vol=100, order='top', loop=1, )
+                self.sub_start(proc_path, panel='0-', vol=int(self.play_volume), order='top', loop=1, limitSec=0, )
 
 
 
@@ -659,19 +718,23 @@ class main_player:
         if (hit == -1):
             # ビジー解除
             qFunc.statusSet(self.fileBsy, False)
-            if (str(self.id) == '0'):
-                qFunc.statusSet(qBusy_d_play, False)
+            if  (self.runMode != 'bgm') \
+            and (self.runMode != 'bgv'):
+                if (str(self.id) == '0'):
+                    qFunc.statusSet(qBusy_d_play, False)
             return False
         else:
             # ビジー設定
             if (qFunc.statusCheck(self.fileBsy) == False):
                 qFunc.statusSet(self.fileBsy, True)
-                if (str(self.id) == '0'):
-                    qFunc.statusSet(qBusy_d_play, True)
+                if  (self.runMode != 'bgm') \
+                and (self.runMode != 'bgv'):
+                    if (str(self.id) == '0'):
+                        qFunc.statusSet(qBusy_d_play, True)
             return True
 
     # 開始
-    def sub_start(self, proc_text, panel='0-', vol=100, order='normal', loop=1, overtext='', ):
+    def sub_start(self, proc_text, panel='0-', vol=100, order='normal', loop=1, overtext='', limitSec=0, ):
 
         # ログ
         qLog.log('info', self.proc_id, 'open ' + proc_text, display=True,)
@@ -701,14 +764,16 @@ class main_player:
             # ビジー設定
             if (qFunc.statusCheck(self.fileBsy) == False):
                 qFunc.statusSet(self.fileBsy, True)
-                if (str(self.id) == '0'):
-                    qFunc.statusSet(qBusy_d_play, True)
+                if  (self.runMode != 'bgm') \
+                and (self.runMode != 'bgv'):
+                    if (str(self.id) == '0'):
+                        qFunc.statusSet(qBusy_d_play, True)
 
             i = hit
             self.play_id[i]   = panel
             self.play_path[i] = proc_text
             self.play_proc[i] = threading.Thread(target=panelPlay, args=(
-                self.play_id[i], self.play_path[i], vol, order, loop, overtext,
+                self.play_id[i], self.play_path[i], vol, order, loop, overtext, limitSec,
                 ))
             #self.play_proc[i].setDaemon(True)
             self.play_proc[i].start()
@@ -815,28 +880,46 @@ if __name__ == '__main__':
                 break
 
         # デバッグ
-        if (onece == True):
-            onece = False
-            if (runMode == 'debug'):
-                #t = u'C:/Users/Public/_m4v__Clip/Perfume/Perfume_FLASH.m4v'
-                #t = u'C:/Users/Public/_m4v__Clip/Perfume'
-                #t = u'_demo0-'   # base + center
-                #t = u'_demo1397' # base + 1,3,9,7
-                #t = u'_demo1234' # base + 1234,6789
-                t = u'_test_'      # base + 1-9
-                qLog.log('debug', main_id, t, )
-                qFunc.txtsWrite(qCtrl_control_self ,txts=[t], encoding='utf-8', exclusive=True, mode='w', )
-
-        # デバッグ
         if (runMode == 'debug'):
 
+            # テスト開始
+            if  ((time.time() - main_start) > 1):
+                if (onece == True):
+                    onece = False
+                    #t = u'C:/Users/Public/_m4v__Clip/Perfume/Perfume_FLASH.m4v'
+                    #t = u'C:/Users/Public/_m4v__Clip/Perfume'
+                    #t = u'_demo0-'   # base + center
+                    #t = u'_demo1397' # base + 1,3,9,7
+                    #t = u'_demo1234' # base + 1234,6789
+                    t = u'_test_'      # base + 1-9
+                    qLog.log('debug', main_id, t, )
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=[t], encoding='utf-8', exclusive=True, mode='w', )
+
             # テスト終了
-            if  ((time.time() - main_start) > 30):
+            if  ((time.time() - main_start) > 120):
                     qLog.log('debug', main_id, '_stop_', )
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
                     time.sleep(5.00)
                     qLog.log('debug', main_id, '_end_', )
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
+
+        # BGM モード
+        if (runMode == 'bgm'):
+
+            # テスト開始
+            if  ((time.time() - main_start) > 1):
+                if (onece == True):
+                    onece = False
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_bgm_'], encoding='utf-8', exclusive=True, mode='w', )
+
+        # BGV モード
+        if (runMode == 'bgv'):
+
+            # テスト開始
+            if  ((time.time() - main_start) > 1):
+                if (onece == True):
+                    onece = False
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_bgv_'], encoding='utf-8', exclusive=True, mode='w', )
 
         # アイドリング
         slow = False

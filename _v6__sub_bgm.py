@@ -17,6 +17,8 @@ import datetime
 import codecs
 import glob
 
+import random
+
 import queue
 import threading
 import subprocess
@@ -124,30 +126,43 @@ config_file = '_v6__sub_bgm_key.json'
 qRiKi_key = _v6__qRiKi_key.qRiKi_key_class()
 res, dic = qRiKi_key.getCryptJson(config_file=config_file, auto_crypt=False, )
 if (res == False):
-    dic['_crypt_']    = 'none'
-    dic['engine']     = 'VLC'
-    dic['path_winos'] = 'C:\\Users\\Public\\'
-    dic['path_macos'] = '/Users/Shared/'
-    dic['path_linux'] = '/users/kondou/Documents/'
-    dic['text_00']    = '自作ＢＧＭ'
-    dic['file_00']    = '_VLC_GB_プレイリスト.xspf'
-    dic['text_01']    = 'お気に入り音楽'
-    dic['file_01']    = '_VLC_etc_プレイリスト.xspf'
-    dic['text_02']    = 'BABYMETAL'
-    dic['file_02']    = '_VLC_BABYMETAL_プレイリスト.xspf'
-    dic['text_03']    = 'perfume'
-    dic['file_03']    = '_VLC_Perfume_プレイリスト.xspf'
-    dic['text_04']    = 'きゃりーぱみゅぱみゅ'
-    dic['file_04']    = '_VLC_きゃりーぱみゅぱみゅ_プレイリスト.xspf'
-    dic['text_05']    = 'ONE OK ROCK'
-    dic['file_05']    = '_VLC_ワンオク_プレイリスト.xspf'
-    dic['text_06']    = 'SEKAI NO OWARI'
-    dic['file_06']    = '_VLC_セカオワ_プレイリスト.xspf'
+    dic['_crypt_']       = 'none'
+    dic['engine']        = 'vlc'
+    #dic['engine']        = 'ffplay'
+    dic['path_winos']    = 'C:\\Users\\Public\\'
+    dic['path_macos']    = '/Users/Shared/'
+    dic['path_linux']    = '/users/kondou/Documents/'
+    dic['text_00']       = '自作ＢＧＭ'
+    dic['file_00']       = '_VLC_GB_プレイリスト.xspf'
+    dic['text_01']       = 'お気に入り音楽'
+    dic['file_01']       = '_VLC_etc_プレイリスト.xspf'
+    dic['text_02']       = 'BABYMETAL'
+    dic['file_02']       = '_VLC_BABYMETAL_プレイリスト.xspf'
+    dic['text_03']       = 'perfume'
+    dic['file_03']       = '_VLC_Perfume_プレイリスト.xspf'
+    dic['text_04']       = 'きゃりーぱみゅぱみゅ'
+    dic['file_04']       = '_VLC_きゃりーぱみゅぱみゅ_プレイリスト.xspf'
+    dic['text_05']       = 'ONE OK ROCK'
+    dic['file_05']       = '_VLC_ワンオク_プレイリスト.xspf'
+    dic['text_06']       = 'SEKAI NO OWARI'
+    dic['file_06']       = '_VLC_セカオワ_プレイリスト.xspf'
+    dic['bgm_changeSec'] = 3000
+    dic['bgm_01']        = 'BGM/BGM_JPOP_3h14m.mp4'
+    dic['bgm_02']        = 'BGM/BGM_JPOP_2h15m.mp4'
+    dic['bgm_03']        = 'BGM/BGM_Ghibli_3h32m.mp4'
+    dic['bgm_04']        = 'BGM/BGM_Ghibli_1h33m.mp4'
+    dic['bgm_05']        = 'BGM/BGM_Ghibli_1h41m.mp4'
+    dic['bgm_06']        = 'BGM/BGM_Lupin_0h51m.mp4'
+    dic['bgm_07']        = 'BGM/BGM_Lupin_3h37m.mp4'
+    dic['bgm_08']        = 'BGM/BGM_DISNEY_1h1m.mp4'
+    dic['bgm_09']        = 'BGM/BGM_Southern_3h35m.mp4'
+    dic['bgm_10']        = 'BGM/BGM_CARPENTERS_0h52m.mp4'
     res = qRiKi_key.putCryptJson(config_file=config_file, put_dic=dic, )
 
 
 
-runMode = 'debug'
+#runMode = 'debug'
+runMode = 'bgm'
 
 
 
@@ -184,46 +199,70 @@ class main_bgm:
 
         # 構成情報
         json_file = '_v6__sub_bgm_key.json'
-        self.engine     = 'VLC'
-        self.path_winos = 'C:\\Users\\Public\\'
-        self.path_macos = '/Users/Shared/'
-        self.path_linux = '/users/kondou/Documents/'
+        self.engine        = 'vlc'
+        #self.engine        = 'ffplay'
+        self.path_winos    = 'C:\\Users\\Public\\'
+        self.path_macos    = '/Users/Shared/'
+        self.path_linux    = '/users/kondou/Documents/'
         self.text = {}
         self.file = {}
-        self.text['00']  = '自作ＢＧＭ'
-        self.file['00']  = '_VLC_GB_プレイリスト.xspf'
-        self.text['01']  = 'お気に入り音楽'
-        self.file['01']  = '_VLC_etc_プレイリスト.xspf'
-        self.text['02']  = 'BABYMETAL'
-        self.file['02']  = '_VLC_BABYMETAL_プレイリスト.xspf'
-        self.text['03']  = 'perfume'
-        self.file['03']  = '_VLC_Perfume_プレイリスト.xspf'
-        self.text['04']  = 'きゃりーぱみゅぱみゅ'
-        self.file['04']  = '_VLC_きゃりーぱみゅぱみゅ_プレイリスト.xspf'
-        self.text['05']  = 'ONE OK ROCK'
-        self.file['05']  = '_VLC_ワンオク_プレイリスト.xspf'
-        self.text['06']  = 'SEKAI NO OWARI'
-        self.file['06']  = '_VLC_セカオワ_プレイリスト.xspf'
+        self.bgm  = {}
+        self.text['00']    = '自作ＢＧＭ'
+        self.file['00']    = '_VLC_GB_プレイリスト.xspf'
+        self.text['01']    = 'お気に入り音楽'
+        self.file['01']    = '_VLC_etc_プレイリスト.xspf'
+        self.text['02']    = 'BABYMETAL'
+        self.file['02']    = '_VLC_BABYMETAL_プレイリスト.xspf'
+        self.text['03']    = 'perfume'
+        self.file['03']    = '_VLC_Perfume_プレイリスト.xspf'
+        self.text['04']    = 'きゃりーぱみゅぱみゅ'
+        self.file['04']    = '_VLC_きゃりーぱみゅぱみゅ_プレイリスト.xspf'
+        self.text['05']    = 'ONE OK ROCK'
+        self.file['05']    = '_VLC_ワンオク_プレイリスト.xspf'
+        self.text['06']    = 'SEKAI NO OWARI'
+        self.file['06']    = '_VLC_セカオワ_プレイリスト.xspf'
+        self.bgm_changeSec = 3000
+        self.bgm['01']     = 'BGM/BGM_JPOP_3h14m.mp4'
+        self.bgm['02']     = 'BGM/BGM_JPOP_2h15m.mp4'
+        self.bgm['03']     = 'BGM/BGM_Ghibli_3h32m.mp4'
+        self.bgm['04']     = 'BGM/BGM_Ghibli_1h33m.mp4'
+        self.bgm['05']     = 'BGM/BGM_Ghibli_1h41m.mp4'
+        self.bgm['06']     = 'BGM/BGM_Lupin_0h51m.mp4'
+        self.bgm['07']     = 'BGM/BGM_Lupin_3h37m.mp4'
+        self.bgm['08']     = 'BGM/BGM_DISNEY_1h1m.mp4'
+        self.bgm['09']     = 'BGM/BGM_Southern_3h35m.mp4'
+        self.bgm['10']     = 'BGM/BGM_CARPENTERS_0h52m.mp4'
         res, json_dic = qRiKi_key.getCryptJson(config_file=json_file, auto_crypt=False, )
         if (res == True):
-            self.engine     = json_dic['engine']
-            self.path_winos = json_dic['path_winos']
-            self.path_macos = json_dic['path_macos']
-            self.path_linux = json_dic['path_linux']
-            self.text['00'] = json_dic['text_00']
-            self.file['00'] = json_dic['file_00']
-            self.text['01'] = json_dic['text_01']
-            self.file['01'] = json_dic['file_01']
-            self.text['02'] = json_dic['text_02']
-            self.file['02'] = json_dic['file_02']
-            self.text['03'] = json_dic['text_03']
-            self.file['03'] = json_dic['file_03']
-            self.text['04'] = json_dic['text_04']
-            self.file['04'] = json_dic['file_04']
-            self.text['05'] = json_dic['text_05']
-            self.file['05'] = json_dic['file_05']
-            self.text['06'] = json_dic['text_06']
-            self.file['06'] = json_dic['file_06']
+            self.engine        = json_dic['engine']
+            self.path_winos    = json_dic['path_winos']
+            self.path_macos    = json_dic['path_macos']
+            self.path_linux    = json_dic['path_linux']
+            self.text['00']    = json_dic['text_00']
+            self.file['00']    = json_dic['file_00']
+            self.text['01']    = json_dic['text_01']
+            self.file['01']    = json_dic['file_01']
+            self.text['02']    = json_dic['text_02']
+            self.file['02']    = json_dic['file_02']
+            self.text['03']    = json_dic['text_03']
+            self.file['03']    = json_dic['file_03']
+            self.text['04']    = json_dic['text_04']
+            self.file['04']    = json_dic['file_04']
+            self.text['05']    = json_dic['text_05']
+            self.file['05']    = json_dic['file_05']
+            self.text['06']    = json_dic['text_06']
+            self.file['06']    = json_dic['file_06']
+            self.bgm_changeSec = json_dic['bgm_changeSec']
+            self.bgm['01']     = json_dic['bgm_01']
+            self.bgm['02']     = json_dic['bgm_02']
+            self.bgm['03']     = json_dic['bgm_03']
+            self.bgm['04']     = json_dic['bgm_04']
+            self.bgm['05']     = json_dic['bgm_05']
+            self.bgm['06']     = json_dic['bgm_06']
+            self.bgm['07']     = json_dic['bgm_07']
+            self.bgm['08']     = json_dic['bgm_08']
+            self.bgm['09']     = json_dic['bgm_09']
+            self.bgm['10']     = json_dic['bgm_10']
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -296,7 +335,8 @@ class main_bgm:
         self.proc_step = '5'
 
         onece = True
-        last_alive = time.time()
+        last_alive   = time.time()
+        last_shuffle = time.time()
 
         while (self.proc_step == '5'):
             self.proc_beat = time.time()
@@ -347,16 +387,34 @@ class main_bgm:
                 cn_s.put([out_name, out_value])
 
             # ＢＧＭアナウンス
-            if (self.bgm_id is None):
-                if ((time.time() - self.bgm_start) > 120):
-                    if (onece == True):
-                        onece = False
+            if (self.runMode == 'debug') \
+            or (self.runMode == 'live'):
+                if (self.bgm_id is None):
+                    if ((time.time() - self.bgm_start) > 120):
+                        if (onece == True):
+                            onece = False
 
-                        if (self.runMode == 'debug') \
-                        or (self.runMode == 'live'):
                             speechs = []
                             speechs.append({ 'text':u'プレイリストの再生はいかがですか？', 'wait':0, })
                             qRiKi.speech(id='speech', speechs=speechs, lang='', )
+
+            # ＢＧＭモード
+            if (self.runMode == 'bgm'):
+
+                # 自動開始
+                if (self.bgm_id is None):
+                    if ((time.time() - self.bgm_start) > 10):
+                        if (onece == True):
+                            onece = False
+
+                            qFunc.txtsWrite(qCtrl_control_self ,txts=['_bgm01_'], encoding='utf-8', exclusive=True, mode='w', )
+                            #qFunc.txtsWrite(qCtrl_control_self ,txts=['_shuffle_'], encoding='utf-8', exclusive=True, mode='w', )
+                            last_shuffle = time.time()
+
+                # シャッフル
+                if  ((time.time() - last_shuffle) > int(self.bgm_changeSec)):
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_shuffle_'], encoding='utf-8', exclusive=True, mode='w', )
+                    last_shuffle = time.time()
 
             # 処理
             if (control != ''):
@@ -442,43 +500,79 @@ class main_bgm:
 
         else:
 
-            txt = proc_text.lower()
             procBgm = ''
+            txt = proc_text.lower()
 
-            if  (txt.find(u'プレイリスト') >= 0) or (txt.find('playlist') >= 0) or (txt.find('bgm') >= 0):
+            # ＢＧＭ実行以外
+            if (self.runMode != 'bgm'):
 
-                if   (txt.find('01') >= 0) or (txt.find('1') >= 0):
-                    procBgm =  '_01_'
-                elif (txt.find('02') >= 0) or (txt.find('2') >= 0):
-                    procBgm =  '_02_'
-                elif (txt.find('03') >= 0) or (txt.find('3') >= 0):
-                    procBgm =  '_03_'
-                elif (txt.find('04') >= 0) or (txt.find('4') >= 0):
-                    procBgm =  '_04_'
-                elif (txt.find('05') >= 0) or (txt.find('5') >= 0):
-                    procBgm =  '_05_'
-                elif (txt.find('06') >= 0) or (txt.find('6') >= 0):
-                    procBgm =  '_06_'
-                elif (txt.find('0') >= 0) or (txt.find(u'ゼロ') >= 0):
-                    procBgm =  '_00_'
-                elif (txt.find(u'リスト') >= 0) or (txt.find('list') >= 0):
-                    speechs = []
-                    #speechs.append({ 'text':u'プレイリストゼロは、自作ＢＧＭです。', 'wait':0, })
-                    #speechs.append({ 'text':u'プレイリスト１は、お気に入り音楽です。', 'wait':0, })
-                    #speechs.append({ 'text':u'プレイリスト２は、「BABYMETAL」です。', 'wait':0, })
-                    #speechs.append({ 'text':u'プレイリスト３は、「perfume」です。', 'wait':0, })
-                    #speechs.append({ 'text':u'プレイリスト４は、「きゃりーぱみゅぱみゅ」です。', 'wait':0, })
-                    #speechs.append({ 'text':u'プレイリスト５は、「ONE OK ROCK」です。', 'wait':0, })
-                    #speechs.append({ 'text':u'プレイリスト６は、「SEKAI NO OWARI」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリストゼロは、「' + self.text['00'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリスト１は、　「' + self.text['01'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリスト２は、　「' + self.text['02'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリスト３は、　「' + self.text['03'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリスト４は、　「' + self.text['04'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリスト５は、　「' + self.text['05'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリスト６は、　「' + self.text['06'] + u'」です。', 'wait':0, })
-                    speechs.append({ 'text':u'プレイリストを再生しますか？', 'wait':0, })
-                    qRiKi.speech(id='speech', speechs=speechs, lang='', )
+                if  (txt.find(u'プレイリスト') >= 0) or (txt.find('playlist') >= 0) or (txt.find('bgm') >= 0):
+
+                    if   (txt.find('01') >= 0) or (txt.find('1') >= 0):
+                        procBgm =  '_01_'
+                    elif (txt.find('02') >= 0) or (txt.find('2') >= 0):
+                        procBgm =  '_02_'
+                    elif (txt.find('03') >= 0) or (txt.find('3') >= 0):
+                        procBgm =  '_03_'
+                    elif (txt.find('04') >= 0) or (txt.find('4') >= 0):
+                        procBgm =  '_04_'
+                    elif (txt.find('05') >= 0) or (txt.find('5') >= 0):
+                        procBgm =  '_05_'
+                    elif (txt.find('06') >= 0) or (txt.find('6') >= 0):
+                        procBgm =  '_06_'
+                    elif (txt.find('0') >= 0) or (txt.find(u'ゼロ') >= 0):
+                        procBgm =  '_00_'
+                    elif (txt.find(u'リスト') >= 0) or (txt.find('list') >= 0):
+                        speechs = []
+                        #speechs.append({ 'text':u'プレイリストゼロは、自作ＢＧＭです。', 'wait':0, })
+                        #speechs.append({ 'text':u'プレイリスト１は、お気に入り音楽です。', 'wait':0, })
+                        #speechs.append({ 'text':u'プレイリスト２は、「BABYMETAL」です。', 'wait':0, })
+                        #speechs.append({ 'text':u'プレイリスト３は、「perfume」です。', 'wait':0, })
+                        #speechs.append({ 'text':u'プレイリスト４は、「きゃりーぱみゅぱみゅ」です。', 'wait':0, })
+                        #speechs.append({ 'text':u'プレイリスト５は、「ONE OK ROCK」です。', 'wait':0, })
+                        #speechs.append({ 'text':u'プレイリスト６は、「SEKAI NO OWARI」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリストゼロは、「' + self.text['00'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリスト１は、　「' + self.text['01'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリスト２は、　「' + self.text['02'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリスト３は、　「' + self.text['03'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリスト４は、　「' + self.text['04'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリスト５は、　「' + self.text['05'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリスト６は、　「' + self.text['06'] + u'」です。', 'wait':0, })
+                        speechs.append({ 'text':u'プレイリストを再生しますか？', 'wait':0, })
+                        qRiKi.speech(id='speech', speechs=speechs, lang='', )
+
+            # ＢＧＭ実行
+            if (self.runMode == 'bgm'):
+
+                if   (txt.find('01') >= 0):
+                    procBgm =  '_bgm01_'
+                elif (txt.find('02') >= 0):
+                    procBgm =  '_bgm02_'
+                elif (txt.find('03') >= 0):
+                    procBgm =  '_bgm03_'
+                elif (txt.find('04') >= 0):
+                    procBgm =  '_bgm04_'
+                elif (txt.find('05') >= 0):
+                    procBgm =  '_bgm05_'
+                elif (txt.find('06') >= 0):
+                    procBgm =  '_bgm06_'
+                elif (txt.find('07') >= 0):
+                    procBgm =  '_bgm07_'
+                elif (txt.find('08') >= 0):
+                    procBgm =  '_bgm08_'
+                elif (txt.find('09') >= 0):
+                    procBgm =  '_bgm09_'
+                elif (txt.find('10') >= 0):
+                    procBgm =  '_bgm10_'
+                elif (txt.find('shuffle') >= 0):
+                    procBgm =  ''
+                    check_time = time.time()
+                    while (procBgm == '') and ((time.time() - check_time) < 10):
+                        r = int(random.random() * 10) + 1   # 1～10
+                        rid = '{:02}'.format(r)
+                        if (self.bgm[rid] != ''):
+                            procBgm = '_bgm' + rid + '_'
+                        time.sleep(0.25)
 
             if (procBgm != ''):
 
@@ -498,52 +592,88 @@ class main_bgm:
         # ファイル
         self.bgm_file = ''
         self.bgm_parm = ''
+
+        # ＢＧＭ実行以外
+        if (self.runMode != 'bgm'):
+
+            if (proc_text.lower() == '_start_') \
+            or (proc_text.lower() == 'bgm') \
+            or (proc_text.lower() == '_00_'):
+                #self.bgm_file = u'_VLC_GB_プレイリスト.xspf'
+                self.bgm_file = self.file['00']
+                if (self.engine == 'vlc') and (self.runMode != 'debug'):
+                    self.bgm_parm = '--qt-start-minimized'
+                    #self.bgm_parm = '--qt-minimal-view'
+
+            elif (proc_text.lower() == '_01_'):
+                #self.bgm_file = u'_VLC_etc_プレイリスト.xspf'
+                self.bgm_file = self.file['01']
+
+            elif (proc_text.lower() == '_02_'):
+                #self.bgm_file = u'_VLC_BABYMETAL_プレイリスト.xspf'
+                self.bgm_file = self.file['02']
+
+            elif (proc_text.lower() == '_03_'):
+                #self.bgm_file = u'_VLC_Perfume_プレイリスト.xspf'
+                self.bgm_file = self.file['03']
+
+            elif (proc_text.lower() == '_04_'):
+                #self.bgm_file = u'_VLC_きゃりーぱみゅぱみゅ_プレイリスト.xspf'
+                self.bgm_file = self.file['04']
+
+            elif (proc_text.lower() == '_05_'):
+                #self.bgm_file = u'_VLC_ワンオク_プレイリスト.xspf'
+                self.bgm_file = self.file['06']
+
+            elif (proc_text.lower() == '_06_'):
+                #self.bgm_file = u'_VLC_セカオワ_プレイリスト.xspf'
+                self.bgm_file = self.file['06']
+
+        # ＢＧＭ実行
+        if (self.runMode == 'bgm'):
+
+            if (self.engine == 'vlc'):
+                self.bgm_parm = '--qt-start-minimized'
+                #self.bgm_parm = '--qt-minimal-view'
+
+            if   (proc_text.lower() == '_bgm01_'):
+                self.bgm_file = self.bgm['01']
+            elif (proc_text.lower() == '_bgm02_'):
+                self.bgm_file = self.bgm['02']
+            elif (proc_text.lower() == '_bgm03_'):
+                self.bgm_file = self.bgm['03']
+            elif (proc_text.lower() == '_bgm04_'):
+                self.bgm_file = self.bgm['04']
+            elif (proc_text.lower() == '_bgm05_'):
+                self.bgm_file = self.bgm['05']
+            elif (proc_text.lower() == '_bgm06_'):
+                self.bgm_file = self.bgm['06']
+            elif (proc_text.lower() == '_bgm07_'):
+                self.bgm_file = self.bgm['07']
+            elif (proc_text.lower() == '_bgm08_'):
+                self.bgm_file = self.bgm['08']
+            elif (proc_text.lower() == '_bgm09_'):
+                self.bgm_file = self.bgm['09']
+            elif (proc_text.lower() == '_bgm10_'):
+                self.bgm_file = self.bgm['10']
+
         self.bgm_name = ''
-
-        if (proc_text.lower() == '_start_') \
-        or (proc_text.lower() == 'bgm') \
-        or (proc_text.lower() == '_00_'):
-            #self.bgm_file = u'_VLC_GB_プレイリスト.xspf'
-            self.bgm_file = self.file['00']
-            self.bgm_parm = '--qt-start-minimized'
-
-        elif (proc_text.lower() == '_01_'):
-            #self.bgm_file = u'_VLC_etc_プレイリスト.xspf'
-            self.bgm_file = self.file['01']
-
-        elif (proc_text.lower() == '_02_'):
-            #self.bgm_file = u'_VLC_BABYMETAL_プレイリスト.xspf'
-            self.bgm_file = self.file['02']
-
-        elif (proc_text.lower() == '_03_'):
-            #self.bgm_file = u'_VLC_Perfume_プレイリスト.xspf'
-            self.bgm_file = self.file['03']
-
-        elif (proc_text.lower() == '_04_'):
-            #self.bgm_file = u'_VLC_きゃりーぱみゅぱみゅ_プレイリスト.xspf'
-            self.bgm_file = self.file['04']
-
-        elif (proc_text.lower() == '_05_'):
-            #self.bgm_file = u'_VLC_ワンオク_プレイリスト.xspf'
-            self.bgm_file = self.file['06']
-
-        elif (proc_text.lower() == '_06_'):
-            #self.bgm_file = u'_VLC_セカオワ_プレイリスト.xspf'
-            self.bgm_file = self.file['06']
-
         if (self.bgm_file != ''):
-            if (os.name == 'nt'):
-                #self.bgm_name = u'C:\\Users\\Public\\' + self.bgm_file
-                self.bgm_name = self.path_winos + self.bgm_file
-            elif (qPLATFORM == 'darwin'):
-                #self.bgm_name = u'/users/kondou/Documents/' + self.bgm_file
-                self.bgm_name = self.path_macos + self.bgm_file
+            if (self.bgm_file[0:4] == 'http'):
+                self.bgm_name = self.bgm_file
             else:
-                #self.bgm_name = u'/users/kondou/Documents/' + self.bgm_file
-                self.bgm_name = self.path_linux + self.bgm_file
+                if (os.name == 'nt'):
+                    #self.bgm_name = u'C:\\Users\\Public\\' + self.bgm_file
+                    self.bgm_name = self.path_winos + self.bgm_file
+                elif (qPLATFORM == 'darwin'):
+                    #self.bgm_name = u'/users/kondou/Documents/' + self.bgm_file
+                    self.bgm_name = self.path_macos + self.bgm_file
+                else:
+                    #self.bgm_name = u'/users/kondou/Documents/' + self.bgm_file
+                    self.bgm_name = self.path_linux + self.bgm_file
 
         # 開始
-        if (self.bgm_file != ''):
+        if (self.bgm_name != ''):
 
             # ビジー設定
             if (qFunc.statusCheck(self.fileBsy) == False):
@@ -673,10 +803,19 @@ if __name__ == '__main__':
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_start_'], encoding='utf-8', exclusive=True, mode='w', )
 
             # テスト終了
-            if  ((time.time() - main_start) > 30):
+            if  ((time.time() - main_start) > 120):
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
                     time.sleep(5.00)
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
+
+        # BGM モード
+        if (runMode == 'bgm'):
+
+            # テスト開始
+            if  ((time.time() - main_start) > 1):
+                if (onece == True):
+                    onece = False
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_start_'], encoding='utf-8', exclusive=True, mode='w', )
 
         # アイドリング
         slow = False

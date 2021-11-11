@@ -1598,7 +1598,7 @@ if __name__ == '__main__':
         cam2Rotate  = '0'
         cam2Zoom    = '1.0'
 
-        dspMode     = 'full'
+        dspMode     = 'auto'
         dspStretch  = '0'
         dspRotate   = '0'
         dspZoom     = '1.0'
@@ -1677,6 +1677,13 @@ if __name__ == '__main__':
             val = str(sys.argv[12]).lower()
             if (val != 'default') and (val != 'auto'):
                 dspMode = val
+        if (dspMode == 'default') or (dspMode == 'auto'):
+            dspMode = 'full'
+            if (runMode == 'debug'):
+                dspMode = 'full-'
+            elif (runMode == 'reception'):
+                if (qFunc.chkSelfDev(cam1Dev) == False):
+                    dspMode = 'full-'
         if (len(sys.argv) >= 14):
             dspStretch = str(sys.argv[13]).lower()
         if (len(sys.argv) >= 15):
@@ -1779,8 +1786,8 @@ if __name__ == '__main__':
             qFunc.statusSet(qBusy_dev_cam,  True)
             qFunc.statusSet(qBusy_dev_dsp,  True)
         if (runMode == 'reception'):
-            qFunc.statusSet(qBusy_dev_dsp,  True)
             if (qFunc.chkSelfDev(cam1Dev) == True):
+                qFunc.statusSet(qBusy_dev_dsp,  True)
                 qFunc.statusSet(qRdy__v_mirror, True)
 
         display_img = None
@@ -1825,6 +1832,7 @@ if __name__ == '__main__':
     show_onece = True
 
     while (not main_core is None):
+        cv2.waitKey(1) # おまじない
 
         # 終了確認
 
@@ -1847,8 +1855,9 @@ if __name__ == '__main__':
             cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
             time.sleep(0.25)
             #cv2.namedWindow('Display', cv2.WINDOW_AUTOSIZE)
-            cv2.moveWindow( 'Display', 0, 0)
+            #cv2.moveWindow( 'Display', 0, 0)
             if (dspMode == 'full'):
+                cv2.moveWindow( 'Display', 0, 0)
                 cv2.setWindowProperty('Display', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN,)
             #qFunc.winBoarder(winTitle='Display', boarder=False, )
             cv2.waitKey(1)
@@ -1897,12 +1906,14 @@ if __name__ == '__main__':
                     # 初回表示
                     if (show_onece == True):
                         cv2.imshow('Display', display_img )
+                        cv2.waitKey(1)
                         cv2.setMouseCallback('Display', DisplayMouseEvent)
-                        if (dspMode == 'full+') or (dspMode == 'full-'):
+                        if (dspMode == 'full+'):
                             cv2.moveWindow( 'Display', -20, -50)
                             qFunc.moveWindowSize(winTitle='Display', posX=-20, posY=-50, dspMode=dspMode, )
                         else:
                             cv2.moveWindow( 'Display',   0,   0)
+                            qFunc.moveWindowSize(winTitle='Display', posX=0, posY=0, dspMode=dspMode, )
                         qFunc.setForegroundWindow(winTitle='Display', )
                         show_onece = False
 
