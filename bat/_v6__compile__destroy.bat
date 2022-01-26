@@ -1,6 +1,6 @@
 @ECHO OFF
 REM ------------------------------------------------
-REM COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+REM COPYRIGHT (C) 2014-2022 Mitsuo KONDOU.
 REM This software is released under the MIT License.
 REM https://github.com/konsan1101
 REM Thank you for keeping the rules.
@@ -32,6 +32,15 @@ rem      python -m pip  install           numpy==1.20.2
 rem rem  python -m pip  install --upgrade matplotlib
          python -m pip  uninstall -y      matplotlib
          python -m pip  install           matplotlib==3.2.2
+rem rem  python -m pip  install --upgrade matplotlib
+         python -m pip  uninstall -y      matplotlib
+         python -m pip  install           matplotlib==3.2.2
+rem rem  python -m pip  install --upgrade opencv-python
+         python -m pip  uninstall -y      opencv-python
+         python -m pip  install           opencv-python==4.4.0.46
+rem rem  python -m pip  install --upgrade opencv-contrib-python
+         python -m pip  uninstall -y      opencv-contrib-python
+         python -m pip  install           opencv-contrib-python==4.4.0.46
 ECHO;
 
 

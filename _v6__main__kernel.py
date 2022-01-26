@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------
-# COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+# COPYRIGHT (C) 2014-2022 Mitsuo KONDOU.
 # This software is released under the MIT License.
 # https://github.com/konsan1101
 # Thank you for keeping the rules.
@@ -423,11 +423,11 @@ class main_kernel:
 
                 if (qRUNATTR == 'python'):
                     main_vision_run = subprocess.Popen([python_exe, qPython_main_vision, 
-                                    self.runMode, self.cam1Dev, self.cam2Dev, ], )
+                                    self.runMode, self.cam1Dev, 'auto', '0', '0', '1.0', self.cam2Dev, ], )
                                     #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
                 else:
                     main_vision_run = subprocess.Popen([qPython_main_vision[:-3],
-                                    self.runMode, self.cam1Dev, self.cam2Dev, ], )
+                                    self.runMode, self.cam1Dev, 'auto', '0', '0', '1.0', self.cam2Dev, ], )
                                     #stdout=subprocess.PIPE, stderr=subprocess.PIPE, )
                 time.sleep(2.00)
 
@@ -799,9 +799,9 @@ if __name__ == '__main__':
         if (len(sys.argv) >= 13):
             qLangOut = str(sys.argv[12]).lower()
         if (len(sys.argv) >= 14):
-            cam1Dev = sys.argv[13]
+            cam1Dev = str(sys.argv[13])
         if (len(sys.argv) >= 15):
-            cam2Dev = sys.argv[14]
+            cam2Dev = str(sys.argv[14])
 
         qLog.log('info', main_id, 'runMode  =' + str(runMode  ))
         qLog.log('info', main_id, 'micDev   =' + str(micDev   ))

@@ -1,6 +1,6 @@
 @ECHO OFF
 REM ------------------------------------------------
-REM COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+REM COPYRIGHT (C) 2014-2022 Mitsuo KONDOU.
 REM This software is released under the MIT License.
 REM https://github.com/konsan1101
 REM Thank you for keeping the rules.
@@ -46,6 +46,21 @@ ECHO psutil==5.8.0
 ECHO websocket-client==0.48.0
 ECHO matplotlib==3.2.2
 ECHO mojimoji==0.0.11
+
+ECHO;
+ECHO ----------
+ECHO 2022/01/26
+ECHO ----------
+ECHO Python==3.9.5
+ECHO setuptools==57.0.0
+ECHO pyinstaller==4.3
+ECHO numpy==1.21.0
+ECHO psutil==5.8.0
+ECHO websocket-client==0.48.0
+ECHO matplotlib==3.2.2
+ECHO mojimoji==0.0.11
+ECHO opencv-python==4.4.0.46
+ECHO opencv-contrib-python==4.4.0.46
 
 ECHO;
 ECHO -----
@@ -184,6 +199,12 @@ rem      python -m pip  install           numpy==1.19
 rem rem  python -m pip  install --upgrade matplotlib==3.2.2
 rem      python -m pip  uninstall -y      matplotlib
 rem      python -m pip  install           matplotlib==3.2.2
+rem rem  python -m pip  install --upgrade opencv-python
+rem      python -m pip  uninstall -y      opencv-python
+rem      python -m pip  install           opencv-python==4.4.0.46
+rem rem  python -m pip  install --upgrade opencv-contrib-python
+rem      python -m pip  uninstall -y      opencv-contrib-python
+rem      python -m pip  install           opencv-contrib-python==4.4.0.46
 
 
 

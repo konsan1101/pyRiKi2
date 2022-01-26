@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------
-# COPYRIGHT (C) 2014-2021 Mitsuo KONDOU.
+# COPYRIGHT (C) 2014-2022 Mitsuo KONDOU.
 # This software is released under the MIT License.
 # https://github.com/konsan1101
 # Thank you for keeping the rules.
@@ -270,10 +270,10 @@ class proc_camera:
                     or  (qFunc.statusCheck(qRdy__v_sendkey) == True)):
 
                         dev = self.camDev
-                        if (qFunc.statusCheck(qRdy__v_mirror) == True):
-                            dev = '0'
-                            if (qHOSTNAME == 'kondou-s10'):
-                                dev = '1'
+                        #if (qFunc.statusCheck(qRdy__v_mirror) == True):
+                        #    dev = '0'
+                        #    if (qHOSTNAME == 'kondou-s10'):
+                        #        dev = '1'
 
                         try:
                             if (os.name != 'nt'):
@@ -694,9 +694,9 @@ if __name__ == '__main__':
 
     #runMode='debug'
     runMode='reception'
-    #camDev='0'
+    camDev='1'
     #camDev='http://192.168.200.251/nphMotionJpeg?Resolution=640x480'
-    camDev='http://kondou-note:5555/MotionJpeg?w=640&h=480'
+    #camDev='http://kondou-note:5555/MotionJpeg?w=640&h=480'
     #camDev='http://localhost:5555/MotionJpeg?w=640&h=480'
     camera_thread = proc_camera(name='camera', id='0', runMode=runMode, 
                     camDev=camDev, camMode='vga', camStretch='0', camRotate='0', camZoom='1.0', camFps='5',)
