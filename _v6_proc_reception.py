@@ -490,36 +490,42 @@ class proc_reception:
         # ここから受付動作
 
         # ビジー設定
+        qLog.log('info', self.proc_id, '無人受付 START', display=True, )
         qFunc.statusSet(qBusy_v_recept, True)
 
         # カメラ・マイク停止
+        qLog.log('info', self.proc_id, '無人受付 カメラ・マイク停止', display=True, )
         qFunc.statusSet(qBusy_dev_cam, True)
         qFunc.statusSet(qBusy_dev_mic, True)
 
         # 表示　開始
+        qLog.log('info', self.proc_id, '無人受付 表示開始', display=True, )
         busy_dsp = qFunc.statusCheck(qBusy_dev_dsp, )
         qFunc.statusSet(qBusy_dev_dsp, False)
 
         # 案内１
         qRiKi.tts(self.proc_id, 'ja, 受付は無人となっております。')
+        qRiKi.tts(self.proc_id, 'ja, ご用件を30秒以内で、おはなしください。')
 
         # 待機
         time.sleep(2)
 
         # マイク　開始
+        qLog.log('info', self.proc_id, '無人受付 マイク開始', display=True, )
         qFunc.statusSet(qBusy_dev_mic, False)
 
         # 音声認識
         time.sleep(30)
 
         # マイク　停止
+        qLog.log('info', self.proc_id, '無人受付 マイク停止', display=True, )
         qFunc.statusSet(qBusy_dev_mic, True)
 
         # 待機
         time.sleep(2)
 
         # 案内２
-        qRiKi.tts(self.proc_id, 'ja, ごようのかたは、しばらくお待ちください。ありがとうございました。')
+        qRiKi.tts(self.proc_id, 'ja, ありがとうございました。')
 
         # 待機
         time.sleep(5)
@@ -530,10 +536,16 @@ class proc_reception:
         # ビジー解除
         qFunc.statusSet(qBusy_v_recept, True)
 
-        # カメラ・表示・マイク　再開
+        # カメラ・マイク　再開
+        qLog.log('info', self.proc_id, '無人受付 カメラ・マイク再開', display=True, )
         qFunc.statusSet(qBusy_dev_cam, False)
-        qFunc.statusSet(qBusy_dev_dsp, busy_dsp)
         qFunc.statusSet(qBusy_dev_mic, False)
+
+        # 表示　再設定
+        qLog.log('info', self.proc_id, '無人受付 表示再設定', display=True, )
+        qFunc.statusSet(qBusy_dev_dsp, busy_dsp)
+
+        qLog.log('info', self.proc_id, '無人受付 END', display=True, )
 
         return True
 

@@ -1,4 +1,5 @@
 @ECHO OFF
+
 REM ------------------------------------------------
 REM COPYRIGHT (C) 2014-2022 Mitsuo KONDOU.
 REM This software is released under the MIT License.
@@ -91,7 +92,7 @@ IF %mode%@==camera@      GOTO MODEGO
 IF %mode%@==assistant@   SET  dev=usb
 IF %mode%@==assistant@   SET  guide=off
 IF %mode%@==assistant@   GOTO MODEGO
-IF %mode%@==reception@   SET  dev=bluetooth
+IF %mode%@==reception@   SET  dev=usb
 IF %mode%@==reception@   SET  guide=off
 IF %mode%@==reception@   GOTO MODEGO
 GOTO MODE
