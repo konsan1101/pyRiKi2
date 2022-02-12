@@ -163,6 +163,9 @@ if (res == False):
 runMode = 'bgm'
 #runMode = 'bgv'
 
+overPath   = ''
+overFolder = ''
+
 
 
 def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, width=320, height=240, fps=5, overText='', limitSec=0):
@@ -332,8 +335,10 @@ def panelPlay(panel, path, vol, order, loop, overtext, limitSec):
 
 class main_player:
 
-    def __init__(self, name='thread', id='0', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug', overPath='', overFolder='', ):
         self.runMode   = runMode
+        self.overPath  = overPath
+        self.overFolder= overFolder
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
@@ -411,6 +416,25 @@ class main_player:
             self.bgv_changeSec     = json_dic['bgv_changeSec']
             self.bgv_folder        = json_dic['bgv_folder']
             self.bgv_volume        = json_dic['bgv_volume']
+
+        if (self.overPath != ''):
+            self.path_winos        = self.overPath
+            self.path_macos        = self.overPath
+            self.path_linux        = self.overPath
+
+        if (self.overFolder != ''):
+            self.play_folder['00'] = self.overFolder
+            self.play_folder['01'] = self.overFolder
+            self.play_folder['02'] = self.overFolder
+            self.play_folder['03'] = self.overFolder
+            self.play_folder['04'] = self.overFolder
+            self.play_folder['05'] = self.overFolder
+            self.play_folder['06'] = self.overFolder
+            self.play_folder['07'] = self.overFolder
+            self.play_folder['08'] = self.overFolder
+            self.play_folder['09'] = self.overFolder
+            self.bgm_folder        = self.overFolder
+            self.bgv_folder        = self.overFolder
 
         self.path_play = {}
         for id in self.play_folder:
@@ -853,9 +877,15 @@ if __name__ == '__main__':
     if (True):
 
         if (len(sys.argv) >= 2):
-            runMode  = str(sys.argv[1]).lower()
+            runMode    = str(sys.argv[1]).lower()
+        if (len(sys.argv) >= 3):
+            overPath   = str(sys.argv[2])
+        if (len(sys.argv) >= 4):
+            overFolder = str(sys.argv[3])
 
-        qLog.log('info', main_id, 'runMode  =' + str(runMode  ))
+        qLog.log('info', main_id, 'runMode    = ' + str(runMode   ))
+        qLog.log('info', main_id, 'overPath   = ' + str(overPath  ))
+        qLog.log('info', main_id, 'overFolder = ' + str(overFolder))
 
     # 起動
 
@@ -863,7 +893,7 @@ if __name__ == '__main__':
 
         qLog.log('info', main_id, 'start')
 
-        main_core = main_player(main_name, '0', runMode=runMode, )
+        main_core = main_player(main_name, '0', runMode=runMode, overPath=overPath, overFolder=overFolder, )
         main_core.begin()
 
         main_start = time.time()

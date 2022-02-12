@@ -164,12 +164,15 @@ if (res == False):
 #runMode = 'debug'
 runMode = 'bgm'
 
+overPath   = ''
+
 
 
 class main_bgm:
 
-    def __init__(self, name='thread', id='0', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug',  overPath='', ):
         self.runMode   = runMode
+        self.overPath  = overPath
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
@@ -263,6 +266,11 @@ class main_bgm:
             self.bgm['08']     = json_dic['bgm_08']
             self.bgm['09']     = json_dic['bgm_09']
             self.bgm['10']     = json_dic['bgm_10']
+
+        if (self.overPath != ''):
+            self.path_winos        = self.overPath
+            self.path_macos        = self.overPath
+            self.path_linux        = self.overPath
 
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
@@ -758,9 +766,12 @@ if __name__ == '__main__':
     if (True):
 
         if (len(sys.argv) >= 2):
-            runMode  = str(sys.argv[1]).lower()
+            runMode    = str(sys.argv[1]).lower()
+        if (len(sys.argv) >= 3):
+            overPath   = str(sys.argv[2])
 
-        qLog.log('info', main_id, 'runMode  =' + str(runMode  ))
+        qLog.log('info', main_id, 'runMode    = ' + str(runMode   ))
+        qLog.log('info', main_id, 'overPath   = ' + str(overPath  ))
 
     # 初期設定
 
@@ -777,7 +788,7 @@ if __name__ == '__main__':
 
         qLog.log('info', main_id, 'start')
 
-        main_core = main_bgm(main_name, '0', runMode=runMode, )
+        main_core = main_bgm(main_name, '0', runMode=runMode, overPath=overPath, )
         main_core.begin()
 
         main_start = time.time()
