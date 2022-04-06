@@ -94,13 +94,14 @@ class qDB_class:
     def pd2fields(self, pandas_df=None, sampling=None, ):
 
         # pandas_df → fields_df
-        columns   = ['フィールド', 'タイプ', '最小値', '最大値', '合計値', '最大桁数', '小数桁数', '日本語有', 'NULL有', 'NULL全件', 'サンプル', ]
+        columns   = ['フィールド', 'タイプ', '最小値', '最大値', '合計値', '最大桁数', '小数桁数', '日付8桁数値', '日本語有', 'NULL有', 'NULL全件', 'サンプル', ]
         fields_df = pd.DataFrame(columns=columns, )
 
         # フィールド
-        for col in pandas_df.columns:
-            series = pd.Series([col], index=['フィールド'], )
-            fields_df = fields_df.append(series, ignore_index=True, )
+        for c in range(len(pandas_df.columns)):
+            col = pandas_df.columns[c]
+            one_df    = pd.DataFrame({'フィールド':[col]},index=[c])
+            fields_df = pd.concat([fields_df, one_df], axis=0)
         fields_df['最大桁数'] = 0
         fields_df['小数桁数'] = 0
 
@@ -118,13 +119,15 @@ class qDB_class:
                 fields_df.loc[index, 'タイプ'] = str(タイプ)
 
         # Nullスキャン
-        for f in range(len(fields_df)):
+        for f in fields_df.index:
             フィールド = fields_df.loc[f, 'フィールド']
             fields_df.loc[f, 'NULL有']   = False  # Nullが1件でもあればTrueに
             fields_df.loc[f, 'NULL全件'] = True   # 有効か1件でもあればFalseに
-            for i in range(len(pandas_df)):
+            n = 0
+            for i in pandas_df.index:
+                n += 1
                 if (not sampling is None):
-                    if (i > sampling):
+                    if (n > sampling):
                         break
                 値 = pandas_df.loc[i, フィールド]
                 if (pd.isnull(値)):
@@ -138,9 +141,7 @@ class qDB_class:
                     break
 
         # Null列を文字化
-        for f in range(len(fields_df)):
-            #if (fields_df.loc[f, 'NULL有']   == True) \
-            #or (fields_df.loc[f, 'NULL全件'] == True):
+        for f in fields_df.index:
             if (fields_df.loc[f, 'NULL全件'] == True):
                 フィールド = fields_df.loc[f, 'フィールド']
                 pandas_df[フィールド].astype('object')
@@ -150,7 +151,7 @@ class qDB_class:
         work_df = pandas_df.copy()
 
         # 数値項目　最小、最大、合計、最大桁数、小数桁数
-        for f in range(len(fields_df)):
+        for f in fields_df.index:
             フィールド = fields_df.loc[f, 'フィールド']
             タイプ     = fields_df.loc[f, 'タイプ']
             if (タイプ[:3] == 'int') \
@@ -163,54 +164,89 @@ class qDB_class:
                 fields_df.loc[f, '最大値'] = 最大値
                 fields_df.loc[f, '合計値'] = 合計値
 
-                桁数1 = len(str(abs(int(最小値))))
+                桁数1 = len(str(int(abs(float(最小値)))))
                 fields_df.loc[f, '最大桁数'] = 桁数1
-                桁数2 = len(str(abs(int(最大値))))
+                桁数2 = len(str(int(abs(float(最大値)))))
                 if (桁数2 > 桁数1):
                     fields_df.loc[f, '最大桁数'] = 桁数2
 
-                小数桁数 = 0
-                for i in range(len(work_df)):
+                サンプル    = "''"
+                小数桁数    = 0
+                日付8桁数値 = '？'
+                n = 0
+                for i in work_df.index:
+                    n += 1
                     if (not sampling is None):
-                        if (i > sampling):
+                        if (n > sampling):
                             break
-                    if (i == 0):
-                        fields_df.loc[f, 'サンプル'] = "'" + str(pandas_df.loc[i, フィールド]) + "'"
-                    内容値 = abs(work_df.loc[i, フィールド])
-                    整数値 = int(内容値)
-                    if (内容値 != 整数値):
-                        小数値 = 内容値 - 整数値
-                        桁数 = len(str(小数値)) - 2  # 0.の2文字
-                        if (桁数 > 小数桁数):
-                            小数桁数 = 桁数                        
+                    値 = work_df.loc[i, フィールド]
+                    if (サンプル == "''") or (サンプル == "'nan'") or (サンプル == "'NaT'"):
+                        サンプル = "'" + str(値) + "'"
+                    if (not pd.isnull(値)):
+                        内容値 = abs(float(値))
+                        整数値 = int(内容値)
+                        if (内容値 != 整数値):
+                            日付8桁数値 = 'NO'
+                            小数値 = 内容値 - 整数値
+                            桁数 = len(str(小数値)) - 2  # 0.の2文字
+                            if (桁数 >= 10):
+                                print('★小数桁数異常？ 値,内容値,整数値,小数値 = ',str(値),内容値,整数値,小数値)
+                            else:
+                                if (桁数 > 小数桁数):
+                                    小数桁数 = 桁数
+                        if (日付8桁数値 != 'NO') and (整数値 != 0):
+                            if (len(str(整数値)) != 8):
+                                日付8桁数値 = 'NO'
+                            else:
+                                try:
+                                    年 = int(str(整数値)[0:4])
+                                    月 = int(str(整数値)[4:6])
+                                    日 = int(str(整数値)[6:8])
+                                    check = datetime.datetime(年, 月, 日, 0, 0, 0)
+                                    if (日付8桁数値 == '？'):
+                                        日付8桁数値 = 'YES'
+                                except:
+                                    日付8桁数値 = 'NO'
+
+                fields_df.loc[f, 'サンプル'] = サンプル
                 fields_df.loc[f, '小数桁数'] = 小数桁数
+                if (日付8桁数値 == 'YES'):
+                    fields_df.loc[f, '日付8桁数値'] = True
+                else:
+                    fields_df.loc[f, '日付8桁数値'] = False
 
         # 文字項目　最大桁数、日本語
-        for f in range(len(fields_df)):
+        for f in fields_df.index:
             フィールド = fields_df.loc[f, 'フィールド']
             タイプ     = fields_df.loc[f, 'タイプ']
             if  (タイプ[:3] != 'int') \
             and (タイプ[:5] != 'float'):
                 work_df = work_df.fillna({フィールド:''})
 
+                サンプル = "''"
                 最大桁数 = 0
                 日本語有 = False
-                for i in range(len(work_df)):
+                n = 0
+                for i in work_df.index:
+                    n += 1
                     if (not sampling is None):
-                        if (i > sampling):
+                        if (n > sampling):
                             break
-                    内容値 = str(work_df.loc[i, フィールド])
-                    if (i == 0):
-                        fields_df.loc[f, 'サンプル'] = "'" + 内容値 + "'"
-                    try:
-                        桁数 = len(内容値.encode('shift_jis'))
-                    except:
-                        桁数 = len(内容値) * 2
-                    if (桁数 > 最大桁数):
-                        最大桁数 = 桁数
-                    if (日本語有 == False):
-                        日本語有 = self.in_japanese(txt=内容値)
+                    値 = work_df.loc[i, フィールド]
+                    if (サンプル == "''") or (サンプル == "'nan'") or (サンプル == "'NaT'"):
+                        サンプル = "'" + str(値) + "'"
+                    if (not pd.isnull(値)):
+                        文字列 = str(値)
+                        try:
+                            桁数 = len(文字列.encode('shift_jis'))
+                        except:
+                            桁数 = len(文字列)
+                        if (桁数 > 最大桁数):
+                            最大桁数 = 桁数
+                        if (日本語有 == False):
+                            日本語有 = self.in_japanese(txt=文字列)
 
+                fields_df.loc[f, 'サンプル'] = サンプル
                 fields_df.loc[f, '最大桁数'] = 最大桁数
                 fields_df.loc[f, '日本語有'] = 日本語有
 
@@ -240,7 +276,7 @@ class qDB_class:
 
         sql  = " CREATE TABLE " + table_id + " ("
 
-        for f in range(len(fields_df)):
+        for f in fields_df.index:
             フィールド = fields_df.loc[f, 'フィールド']
             タイプ     = fields_df.loc[f, 'タイプ']
             最大桁数   = fields_df.loc[f, '最大桁数']
@@ -304,8 +340,7 @@ class qDB_class:
                         batch = threading.Thread(target=self.batch_execute, args=(
                                                  str(i),
                                                  self.server, self.database, self.username, self.password, 
-                                                 sql, ))
-                        batch.setDaemon(True)
+                                                 sql, ), daemon=True, )
                         batch.start()
                         batch_thread.append(batch)
 
@@ -318,7 +353,7 @@ class qDB_class:
 
             # 項目ループ
             sql += "  ( "
-            for f in range(len(fields_df)):
+            for f in fields_df.index:
                 フィールド = fields_df.loc[f, 'フィールド']
                 タイプ     = fields_df.loc[f, 'タイプ']
                 値         = pandas_df.loc[i, フィールド]
@@ -366,8 +401,7 @@ class qDB_class:
                         batch = threading.Thread(target=self.batch_execute, args=(
                                                  str(i),
                                                  self.server, self.database, self.username, self.password, 
-                                                 sql, ))
-                        batch.setDaemon(True)
+                                                 sql, ), daemon=True, )
                         batch.start()
                         batch_thread.append(batch)
 

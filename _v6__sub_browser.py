@@ -338,13 +338,11 @@ class main_browser:
 
         self.proc_s = queue.Queue()
         self.proc_r = queue.Queue()
-        self.proc_main = threading.Thread(target=self.main_proc, args=(self.proc_s, self.proc_r, ))
+        self.proc_main = threading.Thread(target=self.main_proc, args=(self.proc_s, self.proc_r, ), daemon=True, )
         self.proc_beat = time.time()
         self.proc_last = time.time()
         self.proc_step = '0'
         self.proc_seq  = 0
-
-        self.proc_main.setDaemon(True)
         self.proc_main.start()
 
     def abort(self, waitMax=5, ):
@@ -655,8 +653,7 @@ class main_browser:
                 self.batch_thread = threading.Thread(target=html_narou_to_tts, args=(
                         self.batch_abortQ, self.proc_id, 
                         base_url, page_url, self.browser_html, 'yes', 
-                        ))
-                self.batch_thread.setDaemon(True)
+                        ), daemon=True, )
                 self.batch_thread.start()
 
         return True

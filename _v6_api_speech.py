@@ -1729,8 +1729,7 @@ class api_speech_class:
                 procId, fileId,
                 inpInput, inpOutput, trnInput, trnOutput, txtInput, txtOutput, outInput, outOutput,
                 inpPlay, txtPlay, outPlay,
-                ))
-            self.speech_proc.setDaemon(True)
+                ), daemon=True, )
             self.speech_proc.start()
 
         #if (sync == True):

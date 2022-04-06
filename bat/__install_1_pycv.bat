@@ -10,32 +10,6 @@ REM CALL __setpath.bat
 
 ECHO;
 ECHO ----------
-ECHO 2020/11/20
-ECHO ----------
-ECHO Python==3.7.9
-ECHO setuptools==50.3.2
-ECHO pyinstaller==4.1
-ECHO numpy==1.19.0
-ECHO psutil==5.7.3
-ECHO websocket-client==0.48.0
-ECHO matplotlib==3.0.3
-ECHO mojimoji==0.0.11
-
-ECHO;
-ECHO ----------
-ECHO 2021/04/26
-ECHO ----------
-ECHO Python==3.8.9
-ECHO setuptools==56.0.0
-ECHO pyinstaller==4.3
-ECHO numpy==1.20.2
-ECHO psutil==5.8.0
-ECHO websocket-client==0.48.0
-ECHO matplotlib==3.2.2
-ECHO mojimoji==0.0.11
-
-ECHO;
-ECHO ----------
 ECHO 2021/06/26
 ECHO ----------
 ECHO Python==3.9.5
@@ -63,11 +37,28 @@ ECHO opencv-python==4.4.0.46
 ECHO opencv-contrib-python==4.4.0.46
 
 ECHO;
+ECHO ----------
+ECHO 2022/04/04
+ECHO ----------
+ECHO Python==3.9.10
+ECHO setuptools==61.2.0
+ECHO pyinstaller==4.10
+ECHO numpy==1.22.3
+ECHO psutil==5.9.0
+ECHO websocket-client==1.1.0
+ECHO matplotlib==3.5.1
+ECHO pandas==1.4.1
+ECHO mojimoji==0.0.12
+ECHO opencv-python==4.4.0.46
+ECHO opencv-contrib-python==4.4.0.46
+
+ECHO;
 ECHO -----
 ECHO tools
 ECHO -----
 rem           pip  install --upgrade pip
     python -m pip  install --upgrade pip
+    python -m pip  install --upgrade wheel
     python -m pip  install --upgrade setuptools
     python -m pip  install --upgrade pyinstaller
 
@@ -199,6 +190,9 @@ rem      python -m pip  install           numpy==1.19
 rem rem  python -m pip  install --upgrade matplotlib==3.2.2
 rem      python -m pip  uninstall -y      matplotlib
 rem      python -m pip  install           matplotlib==3.2.2
+rem rem  python -m pip  install --upgrade pandas
+rem      python -m pip  uninstall -y      pandas
+rem      python -m pip  install           pandas==1.3.5
 rem rem  python -m pip  install --upgrade opencv-python
 rem      python -m pip  uninstall -y      opencv-python
 rem      python -m pip  install           opencv-python==4.4.0.46

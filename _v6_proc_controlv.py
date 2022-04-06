@@ -152,13 +152,11 @@ class proc_controlv:
 
         self.proc_s = queue.Queue()
         self.proc_r = queue.Queue()
-        self.proc_main = threading.Thread(target=self.main_proc, args=(self.proc_s, self.proc_r, ))
+        self.proc_main = threading.Thread(target=self.main_proc, args=(self.proc_s, self.proc_r, ), daemon=True, )
         self.proc_beat = time.time()
         self.proc_last = time.time()
         self.proc_step = '0'
         self.proc_seq  = 0
-
-        self.proc_main.setDaemon(True)
         self.proc_main.start()
 
     def abort(self, waitMax=5, ):

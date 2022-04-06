@@ -494,8 +494,7 @@ class api_vision_class:
                 runMode, camDev,
                 qApiCV, qApiOCR, qApiTrn, qLangCV, qLangOCR, qLangTrn,
                 procId, fileId, inpCV, tmpCV, outCV, inpOCR, tmpOCR, outOCR, outTrn,
-                ))
-            self.vision_proc.setDaemon(True)
+                ), daemon=True, )
             self.vision_proc.start()
 
         #if (sync == True):
