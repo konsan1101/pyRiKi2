@@ -364,6 +364,32 @@ class qFunc_class:
         ftxt = ftxt.replace('>','_')
         return ftxt
 
+    def url2filepath(self, txt='', ):
+        ftxt = txt.replace(' ','_')
+        ftxt = ftxt.replace('https://','')
+        ftxt = ftxt.replace('http://','')
+        s = ftxt.find('?')
+        if (s != 0):
+            ftxt = ftxt[:s]
+        ftxt = ftxt.replace(u'　','_')
+        ftxt = ftxt.replace(u'、','_')
+        ftxt = ftxt.replace(u'。','_')
+        ftxt = ftxt.replace('"','_')
+        ftxt = ftxt.replace('$','_')
+        ftxt = ftxt.replace('%','_')
+        ftxt = ftxt.replace('&','_')
+        ftxt = ftxt.replace("'",'_')
+        ftxt = ftxt.replace('\\','_')
+        ftxt = ftxt.replace('|','_')
+        ftxt = ftxt.replace('*','_')
+        #ftxt = ftxt.replace('/','_')
+        ftxt = ftxt.replace('?','_')
+        ftxt = ftxt.replace(':',',')
+        ftxt = ftxt.replace('<','_')
+        ftxt = ftxt.replace('>','_')
+        ftxt = ftxt.replace('.','_')
+        return ftxt
+
 
 
     def findWindow(self, winTitle='Display', ):

@@ -111,6 +111,7 @@ venv.bak/
 *.bak
 
 _config/
+_controls/
 _cache/
 julius/model/dnn/logicalTri
 julius/model/dnn/logicalTri.bin

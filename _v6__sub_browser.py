@@ -48,6 +48,8 @@ qFunc = _v6__qFunc.qFunc_class()
 import  _v6__qLog
 qLog  = _v6__qLog.qLog_class()
 
+qPath_controls   = '_controls/'
+
 qPLATFORM        = qRiKi.getValue('qPLATFORM'        )
 qRUNATTR         = qRiKi.getValue('qRUNATTR'         )
 qHOSTNAME        = qRiKi.getValue('qHOSTNAME'        )
@@ -133,7 +135,7 @@ res, dic = qRiKi_key.getCryptJson(config_file=config_file, auto_crypt=False, )
 if (res == False):
     dic['_crypt_']      = 'none'
     dic['engine']       = 'firefox'
-    dic['url_home']     = 'https://google.co.jp'
+    dic['url_home']     = 'https://google.com'
     dic['url_search']   = 'https://www.google.com/search?q='
     dic['narou_home']   = 'https://syosetu.com/'
     dic['narou_base']   = 'https://ncode.syosetu.com/'
@@ -309,8 +311,8 @@ class main_browser:
         # 構成情報
         json_file = '_v6__sub_browser_key.json'
         self.engine       = 'firefox'
-        self.url_home     = 'https://google.co.jp'
-        self.url_search   = 'https://www.google.com/search?q='
+        self.url_home     = 'https://google.com'
+        self.url_search   = 'https://google.com/search?q='
         self.narou_home   = 'https://syosetu.com/'
         self.narou_base   = 'https://ncode.syosetu.com/'
         self.narou_speech = 'yes'
@@ -548,16 +550,19 @@ class main_browser:
                 if (str(self.id) == '0'):
                     qFunc.statusSet(qBusy_d_browser, True)
 
-            # ヘッドレスモードオプション
+            # 開始オプション
             options = FirefoxOptions()
-            #options.add_argument('-headless')
+            #options.add_argument('--headless')
+            #options.add_argument('--width=1920')
+            #options.add_argument('--height=1080')
 
             # FirefoxのWebDriver作成
-            self.browser_id   = Firefox(options=options)
+            self.browser_id = Firefox(options=options)
 
             # ウィンドウサイズとズームを設定
-            #driver.set_window_size(1920, 9999)
-            #driver.execute_script("document.body.style.zoom='100%'")
+            self.browser_id.maximize_window()
+            #self.browser_id.set_window_size(1920, 9999)
+            #self.browser_id.execute_script("document.body.style.zoom='50%'")
 
         # URLを開く
         url   = ''
@@ -620,43 +625,74 @@ class main_browser:
             self.last_url     = None
             return False
 
-        # 変化？
-        self.browser_url = self.browser_id.current_url
-        if (self.browser_url == self.last_url):
-            return False
+        try:
+            # 変化？
+            self.browser_url = self.browser_id.current_url
+            if (self.browser_url == self.last_url):
+                return False
 
-        #visibility_of_all_elements_located
-        #ページの全要素がDOM上に現れ, かつheight・widthが0以上になるまで待機
-        self.browser_wait = WebDriverWait(self.browser_id, 10)
-        element = self.browser_wait.until(EC.visibility_of_all_elements_located)
+            #visibility_of_all_elements_located
+            #ページの全要素がDOM上に現れ, かつheight・widthが0以上になるまで待機
+            self.browser_wait = WebDriverWait(self.browser_id, 10)
+            element = self.browser_wait.until(EC.visibility_of_all_elements_located)
 
-        # 画像保管
-        self.browser_html = self.browser_id.page_source
-        self.last_url     = self.browser_url
-        print(self.browser_url)
-        #self.browser_id.save_screenshot(file_name)
+            # URL
+            self.browser_html = self.browser_id.page_source
+            self.last_url     = self.browser_url
+            print(self.browser_url)
 
-        # 音声読み上げキャンセル
-        if (not self.batch_thread is None):
-            self.batch_abortQ.put('_abort_')
-            time.sleep(2.00)
-            self.batch_thread = None
-        clear_tts(self.proc_id, )
+            # パス
+            path = qFunc.url2filepath(self.browser_url)
+            if (path[-1:] != '/'):
+                path += '/'
+            path_first = path[:path.find('/')+1]
 
-        # なろうページ読み上げ
-        if (self.narou_speech == 'yes'):
-            base_url = self.narou_base     #'https://ncode.syosetu.com/'
-            if (self.browser_url[:len(base_url)] == base_url):
 
-                page_url = self.browser_url[len(base_url):]
-                # threading
-                self.batch_thread = threading.Thread(target=html_narou_to_tts, args=(
-                        self.batch_abortQ, self.proc_id, 
-                        base_url, page_url, self.browser_html, 'yes', 
-                        ), daemon=True, )
-                self.batch_thread.start()
+            # 画像保管
+            if (self.runMode == 'debug'):
+                if  (path_first[:11] != 'www_google_') \
+                and (path_first[:10] != 'www_yahoo_'):
+                    print(path)
+                    qFunc.makeDirs(qPath_controls + path, remove=False, )
+                    self.browser_id.save_screenshot(qPath_controls + path + '_image.png')
 
-        return True
+            # python
+            try:
+                py=subprocess.Popen(['python', qPath_controls + path_first + '_control_script.py', self.runMode, qPath_controls + path_first, ], )
+                py.wait()
+                py.terminate()
+                py = None
+            except Exception as e:
+                pass
+
+            # 音声読み上げキャンセル
+            if (not self.batch_thread is None):
+                self.batch_abortQ.put('_abort_')
+                time.sleep(2.00)
+                self.batch_thread = None
+            clear_tts(self.proc_id, )
+
+            # なろうページ読み上げ
+            if (self.narou_speech == 'yes'):
+                base_url = self.narou_base     #'https://ncode.syosetu.com/'
+                if (self.browser_url[:len(base_url)] == base_url):
+
+                    page_url = self.browser_url[len(base_url):]
+                    # threading
+                    self.batch_thread = threading.Thread(target=html_narou_to_tts, args=(
+                            self.batch_abortQ, self.proc_id, 
+                            base_url, page_url, self.browser_html, 'yes', 
+                            ), daemon=True, )
+                    self.batch_thread.start()
+
+            return True
+
+        except Exception as e:
+            self.sub_stop('_stop_', )
+            if (self.runMode == 'debug'):
+                qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
+
+        return False
 
 
 
@@ -694,7 +730,7 @@ if __name__ == '__main__':
         if (len(sys.argv) >= 2):
             runMode  = str(sys.argv[1]).lower()
 
-        qLog.log('info', main_id, 'runMode  =' + str(runMode  ))
+        qLog.log('info', main_id, 'runMode =' + str(runMode  ))
 
     # 初期設定
 
@@ -736,14 +772,18 @@ if __name__ == '__main__':
                     onece = False
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_start_'], encoding='utf-8', exclusive=True, mode='w', )
                     time.sleep(5.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['http://yahoo.co.jp'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(5.00)
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['https://azip-whiteboard.azurewebsites.net/'], encoding='utf-8', exclusive=True, mode='w', )
+                    time.sleep(15.00)
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['https://azip-portal.azurewebsites.net/'], encoding='utf-8', exclusive=True, mode='w', )
+                    time.sleep(15.00)
+                    qFunc.txtsWrite(qCtrl_control_self ,txts=['http://13.78.51.61/snkMobile/'], encoding='utf-8', exclusive=True, mode='w', )
+                    time.sleep(15.00)
                     qFunc.txtsWrite(qCtrl_control_self ,txts=[u'姫路城'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(5.00)
+                    time.sleep(10.00)
                     qFunc.txtsWrite(qCtrl_control_self ,txts=[u'本好き'], encoding='utf-8', exclusive=True, mode='w', )
 
             # テスト終了
-            if  ((time.time() - main_start) > 40):
+            if  ((time.time() - main_start) > 120):
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
                     time.sleep(5.00)
                     qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
