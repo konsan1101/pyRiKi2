@@ -48,12 +48,11 @@ qFunc = _v6__qFunc.qFunc_class()
 import  _v6__qLog
 qLog  = _v6__qLog.qLog_class()
 
-qPath_controls   = '_controls/'
-
 qPLATFORM        = qRiKi.getValue('qPLATFORM'        )
 qRUNATTR         = qRiKi.getValue('qRUNATTR'         )
 qHOSTNAME        = qRiKi.getValue('qHOSTNAME'        )
 qUSERNAME        = qRiKi.getValue('qUSERNAME'        )
+qPath_controls   = qRiKi.getValue('qPath_controls'   )
 qPath_pictures   = qRiKi.getValue('qPath_pictures'   )
 qPath_videos     = qRiKi.getValue('qPath_videos'     )
 qPath_cache      = qRiKi.getValue('qPath_cache'      )
@@ -136,17 +135,30 @@ if (res == False):
     dic['_crypt_']      = 'none'
     dic['engine']       = 'firefox'
     dic['url_home']     = 'https://google.com'
-    dic['url_search']   = 'https://www.google.com/search?q='
+    dic['url_search']   = 'https://google.com/search?q='
     dic['narou_home']   = 'https://syosetu.com/'
     dic['narou_base']   = 'https://ncode.syosetu.com/'
     dic['narou_speech'] = 'yes'
     res = qRiKi_key.putCryptJson(config_file=config_file, put_dic=dic, )
+
+userpass_file = '_userpass_key.json'
+
+res, dic = qRiKi_key.getCryptJson(config_file=userpass_file, auto_crypt=True, )
+if (res == False):
+    dic['_crypt_']      = 'none'
+    dic['username']     = ''
+    dic['password']     = ''
+    res = qRiKi_key.putCryptJson(config_file=userpass_file, put_dic=dic, )
 
 
 
 runMode = 'debug'
 runUrl  = ''
 #runUrl  = 'https://azip-whiteboard.azurewebsites.net/'
+
+username = ''
+password = ''
+
 
 
 def clear_tts(proc_id, ):
@@ -277,9 +289,11 @@ def html_narou_to_tts(abortQ=None, proc_id=None, base_url='', page_url='', html=
 
 class main_browser:
 
-    def __init__(self, name='thread', id='0', runMode='debug', runUrl='', ):
+    def __init__(self, name='thread', id='0', runMode='debug', runUrl='', username='', password='', ):
         self.runMode   = runMode
         self.runUrl    = runUrl
+        self.username  = username
+        self.password  = password
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
@@ -326,10 +340,17 @@ class main_browser:
             self.narou_home   = json_dic['narou_home']
             self.narou_base   = json_dic['narou_base']
             self.narou_speech = json_dic['narou_speech']
-
         if (self.runUrl != ''):
             self.url_home     = self.runUrl
-            
+
+        # セキュリティ情報
+        userpass_file = '_userpass_key.json'
+        if (self.username == ''):
+            res, json_dic = qRiKi_key.getCryptJson(config_file=userpass_file, auto_crypt=True, )
+            if (res == True):
+                self.username = json_dic['username']
+                self.password = json_dic['password']
+
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
 
@@ -647,7 +668,7 @@ class main_browser:
             # URL
             self.browser_html = self.browser_id.page_source
             self.last_url     = self.browser_url
-            print(self.browser_url)
+            #print(self.browser_url)
 
             # パス
             path = qFunc.url2filepath(self.browser_url)
@@ -660,15 +681,24 @@ class main_browser:
             if (self.runMode == 'debug'):
                 if  (path[:11] != 'www_google_') \
                 and (path[:10] != 'www_yahoo_'):
-                    print(path)
+                    #print(path)
                     qFunc.makeDirs(qPath_controls + path, remove=False, )
                     self.browser_id.save_screenshot(qPath_controls + path + '_image.png')
 
             # python script execute
             try:
-                filename = qPath_controls + path + '_control_script.py'
+                filename = qPath_controls + path + '_script.py'
+                username = self.username
+                password = self.password
                 if (os.path.exists(filename)):
-                    py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, ], )
+
+                    userpass_file = '_userpass_key.json'
+                    res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path, config_file=userpass_file, auto_crypt=True, )
+                    if (res == True):
+                        username = dic['username']
+                        password = dic['password']
+
+                    py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
                     #py.wait()
                     #py.terminate()
                     #py = None
@@ -742,9 +772,17 @@ if __name__ == '__main__':
             runMode  = str(sys.argv[1]).lower()
         if (len(sys.argv) >= 3):
             runUrl   = str(sys.argv[2])
+        if (len(sys.argv) >= 4):
+            username = str(sys.argv[3])
+        if (len(sys.argv) >= 5):
+            password = str(sys.argv[4])
 
-        qLog.log('info', main_id, 'runMode = ' + str(runMode  ))
-        qLog.log('info', main_id, 'runUrl  = ' + str(runUrl   ))
+        qLog.log('info', main_id, 'runMode  = ' + str(runMode  ))
+        qLog.log('info', main_id, 'runUrl   = ' + str(runUrl   ))
+        if (username != ''):
+            qLog.log('info', main_id, 'username = *')
+        if (password != ''):
+            qLog.log('info', main_id, 'password = *')
 
     # 初期設定
 
@@ -761,7 +799,7 @@ if __name__ == '__main__':
 
         qLog.log('info', main_id, 'start')
 
-        main_core = main_browser(main_name, '0', runMode=runMode, runUrl=runUrl, )
+        main_core = main_browser(main_name, '0', runMode=runMode, runUrl=runUrl, username=username, password=password, )
         main_core.begin()
 
         main_start = time.time()

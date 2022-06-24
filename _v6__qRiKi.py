@@ -59,6 +59,7 @@ qPath_fonts     = '_fonts/'
 
 qPath_cache      = setFolder('_cache/' )
 qPath_config     = setFolder('_config/')
+qPath_controls   = setFolder('_controls/')
 qPath_temp       = setFolder('temp/'   )
 
 qPath_log        = setFolder(qPath_temp + '_log/'          )
@@ -209,6 +210,7 @@ class qRiKi_class:
         if (field == 'qRUNATTR'        ): return qRUNATTR
         if (field == 'qHOSTNAME'       ): return qHOSTNAME
         if (field == 'qUSERNAME'       ): return qUSERNAME
+        if (field == 'qPath_controls'  ): return qPath_controls
         if (field == 'qPath_pictures'  ): return qPath_pictures
         if (field == 'qPath_videos'    ): return qPath_videos
         if (field == 'qPath_cache'     ): return qPath_cache
