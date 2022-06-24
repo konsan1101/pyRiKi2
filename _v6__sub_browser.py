@@ -700,7 +700,7 @@ class main_browser:
 
         except Exception as e:
             self.sub_stop('_stop_', )
-            if (self.runMode == 'debug'):
+            if (self.runUrl != ''):
                 qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
 
         return False
