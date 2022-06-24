@@ -145,7 +145,8 @@ if (res == False):
 
 
 runMode = 'debug'
-
+runUrl  = ''
+#runUrl  = 'https://azip-whiteboard.azurewebsites.net/'
 
 
 def clear_tts(proc_id, ):
@@ -276,8 +277,9 @@ def html_narou_to_tts(abortQ=None, proc_id=None, base_url='', page_url='', html=
 
 class main_browser:
 
-    def __init__(self, name='thread', id='0', runMode='debug', ):
+    def __init__(self, name='thread', id='0', runMode='debug', runUrl='', ):
         self.runMode   = runMode
+        self.runUrl    = runUrl
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
@@ -325,6 +327,9 @@ class main_browser:
             self.narou_base   = json_dic['narou_base']
             self.narou_speech = json_dic['narou_speech']
 
+        if (self.runUrl != ''):
+            self.url_home     = self.runUrl
+            
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
 
@@ -389,6 +394,9 @@ class main_browser:
         if (txts != False):
             if (txt == '_end_'):
                 qFunc.remove(qCtrl_control_self)
+
+        if (self.runUrl != ''):
+            self.sub_proc('_start_')
 
         # 待機ループ
         self.proc_step = '5'
@@ -650,18 +658,20 @@ class main_browser:
 
             # 画像保管
             if (self.runMode == 'debug'):
-                if  (path_first[:11] != 'www_google_') \
-                and (path_first[:10] != 'www_yahoo_'):
+                if  (path[:11] != 'www_google_') \
+                and (path[:10] != 'www_yahoo_'):
                     print(path)
                     qFunc.makeDirs(qPath_controls + path, remove=False, )
                     self.browser_id.save_screenshot(qPath_controls + path + '_image.png')
 
-            # python
+            # python script execute
             try:
-                py=subprocess.Popen(['python', qPath_controls + path_first + '_control_script.py', self.runMode, qPath_controls + path_first, ], )
-                py.wait()
-                py.terminate()
-                py = None
+                filename = qPath_controls + path + '_control_script.py'
+                if (os.path.exists(filename)):
+                    py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, ], )
+                    #py.wait()
+                    #py.terminate()
+                    #py = None
             except Exception as e:
                 pass
 
@@ -672,6 +682,7 @@ class main_browser:
                 self.batch_thread = None
             clear_tts(self.proc_id, )
 
+            # Mits6809
             # なろうページ読み上げ
             if (self.narou_speech == 'yes'):
                 base_url = self.narou_base     #'https://ncode.syosetu.com/'
@@ -729,8 +740,11 @@ if __name__ == '__main__':
 
         if (len(sys.argv) >= 2):
             runMode  = str(sys.argv[1]).lower()
+        if (len(sys.argv) >= 3):
+            runUrl   = str(sys.argv[2])
 
-        qLog.log('info', main_id, 'runMode =' + str(runMode  ))
+        qLog.log('info', main_id, 'runMode = ' + str(runMode  ))
+        qLog.log('info', main_id, 'runUrl  = ' + str(runUrl   ))
 
     # 初期設定
 
@@ -747,7 +761,7 @@ if __name__ == '__main__':
 
         qLog.log('info', main_id, 'start')
 
-        main_core = main_browser(main_name, '0', runMode=runMode, )
+        main_core = main_browser(main_name, '0', runMode=runMode, runUrl=runUrl, )
         main_core.begin()
 
         main_start = time.time()
@@ -763,30 +777,37 @@ if __name__ == '__main__':
             if (txt == '_end_'):
                 break
 
+        # 指定実行
+        if (runUrl != ''):
+            if (onece == True):
+                onece = False
+                qFunc.txtsWrite(qCtrl_control_self ,txts=['_start_'], encoding='utf-8', exclusive=True, mode='w', )
+
         # デバッグ
-        if (runMode == 'debug'):
+        else:
+            if (runMode == 'debug'):
 
-            # テスト開始
-            if  ((time.time() - main_start) > 1):
-                if (onece == True):
-                    onece = False
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_start_'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(5.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['https://azip-whiteboard.azurewebsites.net/'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(15.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['https://azip-portal.azurewebsites.net/'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(15.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['http://13.78.51.61/snkMobile/'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(15.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=[u'姫路城'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(10.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=[u'本好き'], encoding='utf-8', exclusive=True, mode='w', )
+                # テスト開始
+                if  ((time.time() - main_start) > 1):
+                    if (onece == True):
+                        onece = False
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['_start_'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(5.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['https://azip-whiteboard.azurewebsites.net/'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(60.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['https://azip-portal.azurewebsites.net/'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(30.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['http://13.78.51.61/snkMobile/'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(30.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=[u'本好き'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(10.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=[u'姫路城'], encoding='utf-8', exclusive=True, mode='w', )
 
-            # テスト終了
-            if  ((time.time() - main_start) > 120):
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
-                    time.sleep(5.00)
-                    qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
+                # テスト終了
+                if  ((time.time() - main_start) > 180):
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(5.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
 
         # アイドリング
         slow = False
