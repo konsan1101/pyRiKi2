@@ -369,7 +369,10 @@ class qFunc_class:
         ftxt = ftxt.replace('https://','')
         ftxt = ftxt.replace('http://','')
         s = ftxt.find('?')
-        if (s != 0):
+        if (s >= 0):
+            ftxt = ftxt[:s]
+        s = ftxt.find('#')
+        if (s >= 0):
             ftxt = ftxt[:s]
         ftxt = ftxt.replace(u'　','_')
         ftxt = ftxt.replace(u'、','_')

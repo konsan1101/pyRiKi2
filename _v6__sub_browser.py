@@ -586,7 +586,7 @@ class main_browser:
             #options.add_argument('--height=1080')
 
             # FirefoxのWebDriver作成
-            self.browser_id = Firefox(options=options)
+            self.browser_id = Firefox(options=options, executable_path='_webdrivers/geckodriver.exe')
 
             # ウィンドウサイズとズームを設定
             self.browser_id.maximize_window()
