@@ -22,6 +22,8 @@ import threading
 import subprocess
 
 from selenium.webdriver import Firefox, FirefoxOptions
+from selenium.webdriver import Edge, EdgeOptions
+#from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -579,14 +581,30 @@ class main_browser:
                 if (str(self.id) == '0'):
                     qFunc.statusSet(qBusy_d_browser, True)
 
-            # 開始オプション
-            options = FirefoxOptions()
-            #options.add_argument('--headless')
-            #options.add_argument('--width=1920')
-            #options.add_argument('--height=1080')
-
             # FirefoxのWebDriver作成
-            self.browser_id = Firefox(options=options, executable_path='_webdrivers/geckodriver.exe')
+            if (self.engine == 'filefox'):
+                options = FirefoxOptions()
+                #options.add_argument('-headless')
+                #options.add_argument('--width=1920')
+                #options.add_argument('--height=1080')
+                # Firefox
+                self.browser_id = Firefox(options=options, executable_path='_webdrivers/geckodriver.exe')
+
+            elif (self.engine == 'edge'):
+                options = EdgeOptions()
+                #options.add_argument('-headless')
+                #options.add_argument('--width=1920')
+                #options.add_argument('--height=1080')
+                # Firefox
+                self.browser_id = Edge(options=options, executable_path='_webdrivers/msedgedriver.exe')
+
+            #elif (self.engine == 'chrome'):
+            #    options = ChromeOptions()
+            #    #options.add_argument('-headless')
+            #    #options.add_argument('--width=1920')
+            #    #options.add_argument('--height=1080')
+            #    # Firefox
+            #    self.browser_id = Chrome(options=options, executable_path='_webdrivers/chromedriver.exe')
 
             # ウィンドウサイズとズームを設定
             self.browser_id.maximize_window()
@@ -693,10 +711,17 @@ class main_browser:
                 if (os.path.exists(filename)):
 
                     userpass_file = '_userpass_key.json'
-                    res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path, config_file=userpass_file, auto_crypt=True, )
-                    if (res == True):
-                        username = dic['username']
-                        password = dic['password']
+                    if (os.path.exists(qPath_controls + path + userpass_file)):
+                        res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path, config_file=userpass_file, auto_crypt=True, )
+                        if (res == True):
+                            username = dic['username']
+                            password = dic['password']
+                    else:
+                        if (os.path.exists(qPath_controls + path_first + userpass_file)):
+                            res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path, config_file=userpass_file, auto_crypt=True, )
+                            if (res == True):
+                                username = dic['username']
+                                password = dic['password']
 
                     py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
                     #py.wait()
