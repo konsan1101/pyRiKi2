@@ -365,7 +365,19 @@ class qFunc_class:
         return ftxt
 
     def url2filepath(self, txt='', ):
-        ftxt = txt.replace(' ','_')
+        # EDGE
+        s = txt.find('プロファイル 1 - Microsoft')
+        if (s >= 0):
+            txt = txt[:s] + 'MicrosoftEdge'
+
+        # 前後逆転
+        s = txt.find(' - ')
+        if (s < 0):
+            ftxt = txt
+        else:
+            ftxt = txt[s+2:] + '/' + txt[:s]
+
+        # HTTP
         ftxt = ftxt.replace('https://','')
         ftxt = ftxt.replace('http://','')
         ftxt = ftxt.replace('//','/')
@@ -376,22 +388,25 @@ class qFunc_class:
         s = ftxt.find('#')
         if (s >= 0):
             ftxt = ftxt[:s]
+
+        ftxt = ftxt.replace(u' ','')
         ftxt = ftxt.replace(u'　','_')
-        ftxt = ftxt.replace(u'、','_')
-        ftxt = ftxt.replace(u'。','_')
-        ftxt = ftxt.replace('"','_')
+        ftxt = ftxt.replace(u'、','.')
+        ftxt = ftxt.replace(u'。','.')
+        ftxt = ftxt.replace('"','')
         ftxt = ftxt.replace('$','_')
         ftxt = ftxt.replace('%','_')
         ftxt = ftxt.replace('&','_')
-        ftxt = ftxt.replace("'",'_')
+        ftxt = ftxt.replace("'",'')
         ftxt = ftxt.replace('\\','_')
         ftxt = ftxt.replace('|','_')
         ftxt = ftxt.replace('*','_')
-        #ftxt = ftxt.replace('/','_')
         ftxt = ftxt.replace('?','_')
         ftxt = ftxt.replace(':',',')
         ftxt = ftxt.replace('<','_')
         ftxt = ftxt.replace('>','_')
+        ftxt = ftxt.replace('(','')
+        ftxt = ftxt.replace(')','')
         ftxt = ftxt.replace('.','_')
         return ftxt
 

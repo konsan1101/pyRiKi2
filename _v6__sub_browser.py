@@ -686,39 +686,39 @@ class main_browser:
             # URL
             self.browser_html = self.browser_id.page_source
             self.last_url     = self.browser_url
-            #print(self.browser_url)
+            print(self.browser_url)
 
             # パス
             path = qFunc.url2filepath(self.browser_url)
             if (path[-1:] != '/'):
                 path += '/'
             path_first = path[:path.find('/')+1]
-
+            path2 = qPath_controls + path
 
             # 画像保管
             if (self.runMode == 'debug'):
                 if  (path[:11] != 'www_google_') \
                 and (path[:10] != 'www_yahoo_'):
-                    #print(path)
-                    qFunc.makeDirs(qPath_controls + path, remove=False, )
-                    self.browser_id.save_screenshot(qPath_controls + path + '_image.png')
+                    #print(path2)
+                    qFunc.makeDirs(path2, remove=False, )
+                    self.browser_id.save_screenshot(path2 + '_image.png')
 
             # python script execute
             try:
-                filename = qPath_controls + path + '_script.py'
+                filename = path2 + '_script.py'
                 username = self.username
                 password = self.password
                 if (os.path.exists(filename)):
 
                     userpass_file = '_userpass_key.json'
-                    if (os.path.exists(qPath_controls + path + userpass_file)):
-                        res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path, config_file=userpass_file, auto_crypt=True, )
+                    if (os.path.exists(path2 + userpass_file)):
+                        res, dic = qRiKi_key.getCryptJson(config_path=path2, config_file=userpass_file, auto_crypt=True, )
                         if (res == True):
                             username = dic['username']
                             password = dic['password']
                     else:
                         if (os.path.exists(qPath_controls + path_first + userpass_file)):
-                            res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path, config_file=userpass_file, auto_crypt=True, )
+                            res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + path_first, config_file=userpass_file, auto_crypt=True, )
                             if (res == True):
                                 username = dic['username']
                                 password = dic['password']

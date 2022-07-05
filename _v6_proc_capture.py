@@ -23,6 +23,14 @@ import subprocess
 
 import numpy as np
 import cv2
+if (os.name == 'nt'):
+    import win32gui
+
+
+
+# インターフェース
+qCtrl_control_capture    = 'temp/control_capture.txt'
+qCtrl_control_self       = qCtrl_control_capture
 
 
 
@@ -113,10 +121,39 @@ qRdy__d_sendkey  = qRiKi.getValue('qRdy__d_sendkey'  )
 
 
 
+import _v6__qRiKi_key
+
+config_file = '_v6_proc_capture_key.json'
+
+qRiKi_key = _v6__qRiKi_key.qRiKi_key_class()
+res, dic = qRiKi_key.getCryptJson(config_file=config_file, auto_crypt=False, )
+if (res == False):
+    dic['_crypt_']      = 'none'
+    dic['pyscript']     = 'yes'
+    res = qRiKi_key.putCryptJson(config_file=config_file, put_dic=dic, )
+
+userpass_file = '_userpass_key.json'
+
+res, dic = qRiKi_key.getCryptJson(config_file=userpass_file, auto_crypt=True, )
+if (res == False):
+    dic['_crypt_']      = 'none'
+    dic['username']     = ''
+    dic['password']     = ''
+    res = qRiKi_key.putCryptJson(config_file=userpass_file, put_dic=dic, )
+
+
+
+runMode = 'debug'
+username = ''
+password = ''
+
+
+
 class proc_capture:
 
     def __init__(self, name='thread', id='0', runMode='debug', 
-        capStretch='0', capRotate='0', capZoom='1.0', capFps='2', ):
+        capStretch='0', capRotate='0', capZoom='1.0', capFps='2',
+        username='', password='', ):
 
         self.runMode    = runMode
         self.capStretch = capStretch
@@ -125,6 +162,8 @@ class proc_capture:
         self.capFps     = '5'
         if (capFps.isdigit()):
             self.capFps = str(capFps)
+        self.username   = username
+        self.password   = password
 
         self.breakFlag = threading.Event()
         self.breakFlag.clear()
@@ -145,6 +184,11 @@ class proc_capture:
         self.proc_last = None
         self.proc_step = '0'
         self.proc_seq  = 0
+
+        self.winName       = None
+        self.last_winName  = None
+        self.last_time     = time.time()
+        self.last_pathName = None
 
         # 変数設定
         self.blue_img = np.zeros((240,320,3), np.uint8)
@@ -267,6 +311,8 @@ class proc_capture:
 
 
             # 画像処理
+            frame = None
+            input_img = None
             if (cn_s.qsize() == 0):
             #if (True):
 
@@ -353,7 +399,69 @@ class proc_capture:
                         out_value = input_img.copy()
                         cn_s.put([out_name, out_value])
 
+            # メインウィンド取得
+            if (os.name == 'nt'):
+                try:
+                    hWnd = win32gui.GetForegroundWindow()
+                    self.winName = win32gui.GetWindowText(hWnd)
+                    print(self.winName)
+                except:
+                    self.winName = None
+                    pass
 
+                if (self.winName != self.last_winName):
+                    if (self.last_pathName != None):
+                        print(self.last_pathName + " " + str(int(time.time() - self.last_time)) + 's ')
+ 
+                    if (self.winName != None):
+
+                        # パス
+                        path = qFunc.url2filepath(self.winName)
+                        if (path[-1:] != '/'):
+                            path += '/'
+                        path_first = path[:path.find('/')+1]
+                        path2 = qPath_controls + '_desktop/' + path
+                        #print(path)
+                        #print(path_first)
+                        print(path2)
+
+                        self.last_winName  = self.winName
+                        self.last_time     = time.time()
+                        self.last_pathName = path2
+
+                        # 画像保管
+                        if (self.runMode == 'debug'):
+                            #print(path2)
+                            qFunc.makeDirs(path2, remove=False, )
+                            if (not input_img is None):
+                                cv2.imwrite(path2 + '_image.png', input_img)
+
+                        # python script execute
+                        try:
+                            filename = path2 + '_script.py'
+                            username = self.username
+                            password = self.password
+                            if (os.path.exists(filename)):
+
+                                userpass_file = '_userpass_key.json'
+                                if (os.path.exists(path2 + userpass_file)):
+                                    res, dic = qRiKi_key.getCryptJson(config_path=path2, config_file=userpass_file, auto_crypt=True, )
+                                    if (res == True):
+                                        username = dic['username']
+                                        password = dic['password']
+                                    else:
+                                        if (os.path.exists(qPath_controls + '_desktop/' + path_first + userpass_file)):
+                                            res, dic = qRiKi_key.getCryptJson(config_path=qPath_controls + '_desktop/' + path_first, config_file=userpass_file, auto_crypt=True, )
+                                            if (res == True):
+                                                username = dic['username']
+                                                password = dic['password']
+
+                                py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
+                                #py.wait()
+                                #py.terminate()
+                                #py = None
+                        except Exception as e:
+                            pass
 
             # アイドリング
             slow = False
@@ -396,7 +504,20 @@ class proc_capture:
 
 
 
+# シグナル処理
+import signal
+def signal_handler(signal_number, stack_frame):
+    print(os.path.basename(__file__), 'accept signal =', signal_number)
+
+#signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT,  signal.SIG_IGN)
+signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+
+
 if __name__ == '__main__':
+    main_name = 'capture'
+    main_id   = '{0:10s}'.format(main_name).replace(' ', '_')
 
     # 共通クラス
     qRiKi.init()
@@ -407,44 +528,112 @@ if __name__ == '__main__':
     filename = qPath_log + nowTime.strftime('%Y%m%d.%H%M%S') + '.' + os.path.basename(__file__) + '.log'
     qLog.init(mode='logger', filename=filename, )
 
-    # 設定
-    cv2.namedWindow('Display', 1)
-    cv2.moveWindow( 'Display', 0, 0)
+    qLog.log('info', main_id, 'init')
+    qLog.log('info', main_id, 'exsample.py runMode, ')
 
-    capture_thread = proc_capture(name='capture', id='0', runMode='debug', 
-                                  capStretch='0', capRotate='0', capZoom='1.0', capFps='2', )
-    capture_thread.begin()
+    # パラメータ
 
+    if (True):
 
+        if (len(sys.argv) >= 2):
+            runMode  = str(sys.argv[1]).lower()
+        if (len(sys.argv) >= 3):
+            username = str(sys.argv[2])
+        if (len(sys.argv) >= 4):
+            password = str(sys.argv[3])
 
-    # ループ
-    chktime = time.time()
-    while ((time.time() - chktime) < 15):
+        qLog.log('info', main_id, 'runMode  = ' + str(runMode  ))
+        if (username != ''):
+            qLog.log('info', main_id, 'username = *')
+        if (password != ''):
+            qLog.log('info', main_id, 'password = *')
 
-        res_data  = capture_thread.get()
-        res_name  = res_data[0]
-        res_value = res_data[1]
-        if (res_name != ''):
-            if (res_name == '[window]'):
-                pass
-            elif (res_name == '[img]'):
-                cv2.imshow('Display', res_value.copy() )
+    # 初期設定
+
+    if (True):
+
+        txts, txt = qFunc.txtsRead(qCtrl_control_self)
+        if (txts != False):
+            if (txt == '_end_'):
+                qFunc.remove(qCtrl_control_self)
+
+        if (runMode == 'debug'):
+            cv2.namedWindow('Display', 1)
+            cv2.moveWindow( 'Display', 500, 500)
+
+    # 起動
+
+    if (True):
+
+        qLog.log('info', main_id, 'start')
+
+        main_core = proc_capture(name='capture', id='0', runMode=runMode, 
+                                  capStretch='0', capRotate='0', capZoom='1.0', capFps='2',
+                                  username=username, password=password, )
+        main_core.begin()
+
+        main_start = time.time()
+        onece      = True
+
+    # 待機ループ
+
+    while (True):
+
+        # 終了確認
+        txts, txt = qFunc.txtsRead(qCtrl_control_self)
+        if (txts != False):
+            if (txt == '_end_'):
+                break
+
+        else:
+
+            res_data  = main_core.get()
+            res_name  = res_data[0]
+            res_value = res_data[1]
+            if (res_name != ''):
+                if (res_name == '[window]'):
+                    pass
+                elif (res_name == '[img]'):
+                    if (runMode == 'debug'):
+                        cv2.imshow('Display', res_value.copy() )
+                        #pass
+                else:
+                    print(res_name, res_value, )
+
+            # デバッグ
+            if (runMode == 'debug'):
                 cv2.waitKey(1)
-            else:
-                print(res_name, res_value, )
 
-        #if (capture_thread.proc_s.qsize() == 0):
-        #    capture_thread.put(['_status_', ''])
+                # テスト終了
+                if  ((time.time() - main_start) > 180):
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['_stop_'], encoding='utf-8', exclusive=True, mode='w', )
+                        time.sleep(5.00)
+                        qFunc.txtsWrite(qCtrl_control_self ,txts=['_end_'], encoding='utf-8', exclusive=True, mode='w', )
 
-        time.sleep(0.02)
+        # アイドリング
+        slow = False
+        if   (qFunc.statusCheck(qBusy_dev_cpu) == True):
+            slow = True
 
-    time.sleep(1.00)
-    capture_thread.abort()
-    del capture_thread
+        if (slow == True):
+            time.sleep(1.00)
+        else:
+            time.sleep(0.50)
 
+    # 終了
 
+    if (True):
 
-    cv2.destroyAllWindows()
+        if (runMode == 'debug'):
+            cv2.destroyAllWindows()
 
+        qLog.log('info', main_id, 'terminate')
+
+        main_core.abort()
+        del main_core
+
+        qLog.log('info', main_id, 'bye!')
+
+        sys.exit(0)
 
 
