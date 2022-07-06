@@ -404,15 +404,16 @@ class proc_capture:
                 try:
                     hWnd = win32gui.GetForegroundWindow()
                     self.winName = win32gui.GetWindowText(hWnd)
-                    print(self.winName)
+                    #print(self.winName)
                 except:
                     self.winName = None
                     pass
 
                 if (self.winName != self.last_winName):
                     if (self.last_pathName != None):
-                        print(self.last_pathName + " " + str(int(time.time() - self.last_time)) + 's ')
- 
+                        #print(self.last_pathName + " " + str(int(time.time() - self.last_time)) + 's ')
+                        pass
+
                     if (self.winName != None):
 
                         # パス
@@ -423,7 +424,7 @@ class proc_capture:
                         path2 = qPath_controls + '_desktop/' + path
                         #print(path)
                         #print(path_first)
-                        print(path2)
+                        #print(path2)
 
                         self.last_winName  = self.winName
                         self.last_time     = time.time()
@@ -437,10 +438,11 @@ class proc_capture:
                                 cv2.imwrite(path2 + '_image.png', input_img)
 
                         # python script execute
-                        try:
+                        if True: #try:
                             filename = path2 + '_script.py'
                             username = self.username
                             password = self.password
+                            #print('check ' + filename)
                             if (os.path.exists(filename)):
 
                                 userpass_file = '_userpass_key.json'
@@ -456,12 +458,14 @@ class proc_capture:
                                                 username = dic['username']
                                                 password = dic['password']
 
-                                py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
+                                print('python ' + filename + ' ' + self.runMode)
+
+                                py=subprocess.Popen(['python', filename, self.runMode, path2, username, password, ], )
                                 #py.wait()
                                 #py.terminate()
                                 #py = None
-                        except Exception as e:
-                            pass
+                        #except Exception as e:
+                        #    pass
 
             # アイドリング
             slow = False

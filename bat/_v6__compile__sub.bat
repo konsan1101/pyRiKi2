@@ -32,6 +32,7 @@ IF EXIST "dist\%pyname%.exe"  ECHO "%pyname%.exe"
     copy "dist\%pyname%.exe"       "%pyname%.exe"
     del  "%pyname%.spec"
     copy "%pyname%.exe"        "C:\RiKi_assistant\%pyname%.exe"
+    copy "%pyname%.exe"        "C:\_‹¤—L\RPA\%pyname%.exe"
     del  "%pyname%.exe"
 
 set pyname=_v6__sub_player
@@ -42,6 +43,18 @@ IF EXIST "dist\%pyname%.exe"  ECHO "%pyname%.exe"
     copy "dist\%pyname%.exe"       "%pyname%.exe"
     del  "%pyname%.spec"
     copy "%pyname%.exe"        "C:\RiKi_assistant\%pyname%.exe"
+    copy "%pyname%.exe"        "C:\_‹¤—L\Player\%pyname%.exe"
+    del  "%pyname%.exe"
+
+set pyname=_v6_proc_capture
+    echo;
+    echo %pyname%.py
+    pyinstaller %pyname%.py  -F --log-level ERROR  --icon="_icons/capture.ico"
+IF EXIST "dist\%pyname%.exe"  ECHO "%pyname%.exe"
+    copy "dist\%pyname%.exe"       "%pyname%.exe"
+    del  "%pyname%.spec"
+    copy "%pyname%.exe"        "C:\RiKi_assistant\%pyname%.exe"
+    copy "%pyname%.exe"        "C:\_‹¤—L\RPA\%pyname%.exe"
     del  "%pyname%.exe"
 
 ECHO;

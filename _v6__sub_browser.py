@@ -686,7 +686,7 @@ class main_browser:
             # URL
             self.browser_html = self.browser_id.page_source
             self.last_url     = self.browser_url
-            print(self.browser_url)
+            #print(self.browser_url)
 
             # パス
             path = qFunc.url2filepath(self.browser_url)
@@ -704,7 +704,7 @@ class main_browser:
                     self.browser_id.save_screenshot(path2 + '_image.png')
 
             # python script execute
-            try:
+            if True: #try:
                 filename = path2 + '_script.py'
                 username = self.username
                 password = self.password
@@ -723,12 +723,14 @@ class main_browser:
                                 username = dic['username']
                                 password = dic['password']
 
+                    print('python ' + filename + ' ' + self.runMode)
+
                     py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
                     #py.wait()
                     #py.terminate()
                     #py = None
-            except Exception as e:
-                pass
+            #except Exception as e:
+            #    pass
 
             # 音声読み上げキャンセル
             if (not self.batch_thread is None):
