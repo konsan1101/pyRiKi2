@@ -26,6 +26,7 @@ if (os.name == 'nt'):
     import ctypes
 
 import random
+#import cv2
 
 #print(os.path.dirname(__file__))
 #print(os.path.basename(__file__))
@@ -46,6 +47,8 @@ import  _v6__qFunc
 qFunc = _v6__qFunc.qFunc_class()
 import  _v6__qLog
 qLog  = _v6__qLog.qLog_class()
+#import  _v6__qGuide
+#qGuide= _v6__qGuide.qGuide_class()
 
 qPLATFORM        = qRiKi.getValue('qPLATFORM'        )
 qRUNATTR         = qRiKi.getValue('qRUNATTR'         )
@@ -268,7 +271,7 @@ def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, w
                         break
                     last_mouse_x = x
                     last_mouse_y = y
-                time.sleep(0.50)
+                time.sleep(0.25)
 
     else:
             time.sleep(1.00)
@@ -295,6 +298,9 @@ def panelPlay(panel, runMode, path, vol, order, loop, overtext, limitSec, stopBy
         last_mouse_x = x
         last_mouse_y = y
         last_mouse_time = time.time() - stopByMouseSec
+
+    #black_screen = 'off'
+    #black_time   = None
 
     count = 0
     while (loop > 0):
@@ -444,13 +450,44 @@ def panelPlay(panel, runMode, path, vol, order, loop, overtext, limitSec, stopBy
                     last_mouse_x = x
                     last_mouse_y = y
 
+                ## BLACK OFF
+                #if (playFlag != True):
+                #    if (runMode == 'bgv'):
+                #        if (black_screen == 'on'):
+                #            if (black_time != None):
+                #                if ((time.time() - black_time) > 2):
+                #                    try:
+                #                        qGuide.close()
+                #                        qGuide.terminate()
+                #                    except:
+                #                        pass
+                #                    black_screen = 'off'
+                #                    black_time   = None
+
                 # play
                 if (playFlag == True):
+                    ## BLACK ON
+                    #if (runMode == 'bgv'):
+                    #    img = cv2.imread(qPath_icons + '__black.png')
+                    #    qGuide.init(panel='0+', title='black', image=img,)
+                    #    qGuide.open()
+                    #    black_screen  = 'on'
+                    #    black_time    = None
+
+                    # play
                     left, top, width, height = qFunc.getPanelPos(p,)
                     res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext, limitSec2, stopByMouseSec, )
                     count += 1
-                else:
-                    time.sleep(1.00)
+
+                    ## BLACK OFF START
+                    #if (runMode == 'bgv'):
+                    #    #try:
+                    #    #    qGuide.close()
+                    #    #    qGuide.terminate()
+                    #    #except:
+                    #    #    pass
+                    #    #black_screen = 'off'
+                    #    black_time = time.time()
 
                 # Mouse Move ?
                 if (stopByMouseSec != 0):

@@ -693,6 +693,8 @@ class qFunc_class:
             return 0, 0, w, h
         elif (id == '0-'):
             return wb, hb, int(w-wb*2), int(h-hb*2)
+        elif (id == '0+'):
+            return -30, -30, w+60, h+60
         elif (id == '1'):
             return 0, 0, int(w/3), int(h/3)
         elif (id == '1-'):
