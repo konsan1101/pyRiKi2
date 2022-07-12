@@ -24,8 +24,8 @@ rem rem  python -m pip  install --upgrade setuptools
 rem rem  python -m pip  uninstall -y      setuptools
 rem rem  python -m pip  install           setuptools==56.0.0
 rem rem  python -m pip  install --upgrade pyinstaller
-rem rem  python -m pip  uninstall -y      pyinstaller
-rem rem  python -m pip  install           pyinstaller==4.3
+         python -m pip  uninstall -y      pyinstaller
+         python -m pip  install           pyinstaller==5.1
 rem rem  python -m pip  install --upgrade numpy
 rem      python -m pip  uninstall -y      numpy
 rem      python -m pip  install           numpy==1.20.2
