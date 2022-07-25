@@ -161,6 +161,7 @@ if (res == False):
     dic['bgv_folder']         = '_動画_AppleTV'
     dic['bgv_volume']         = 0
     dic['bgv_stopByMouseSec'] = 300
+    dic['bgv_overText']       = '%{localtime}'
     dic['dayStart']           = '06:25:00'
     dic['dayEnd']             = '18:05:00'
     dic['lunchStart']         = '12:00:00'
@@ -178,7 +179,7 @@ overFolder = ''
 
 
 
-def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, width=320, height=240, fps=5, overText='', limitSec=0, stopByMouseSec=0, ):
+def qFFplay(runMode='debug', id='qFFplay', file='', vol=100, order='normal', left=100, top=100, width=320, height=240, fps=5, overText='', limitSec=0, stopByMouseSec=0, ):
 
     #ffplay -i test_input.flv -volume 100 -window_title "test_input.flv" -noborder -autoexit -x 320 -y 240
     #ffplay -i test_input.flv -volume 100 -window_title "test_input.flv" -noborder -autoexit -fs
@@ -193,7 +194,10 @@ def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, w
 
     vf = 'fps=' + str(fps)
     if (overText != ''):
-        vf += ',drawtext=fontfile=' + qFONT_default['file'] + ':fontsize=256:fontcolor=white:text=' + overText
+        if (runMode != 'bgv'):
+            vf += ",drawtext=fontfile=" + qFONT_default['file'] + ":fontsize=256:fontcolor=white:x=0:y=0:text='" + overText + "'"
+        else:
+            vf += ",drawtext=fontfile=" + qFONT_default['file'] + ":fontsize=64:fontcolor=white:x=0:y=h-th:text='" + overText + "'"
 
     if (file[-4:].lower() == '.wav') \
     or (file[-4:].lower() == '.mp3') \
@@ -283,7 +287,7 @@ def qFFplay(id='qFFplay', file='', vol=100, order='normal', left=100, top=100, w
 
 
 
-def panelPlay(panel, runMode, path, vol, order, loop, overtext, limitSec, stopByMouseSec, dayStart, dayEnd, lunchStart, lunchEnd, ):
+def panelPlay(panel, runMode, path, vol, order, loop, overText, limitSec, stopByMouseSec, dayStart, dayEnd, lunchStart, lunchEnd, ):
 
     #print('★panelPlay', path)
 
@@ -330,7 +334,7 @@ def panelPlay(panel, runMode, path, vol, order, loop, overtext, limitSec, stopBy
 
             # play
             left, top, width, height = qFunc.getPanelPos(p,)
-            res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext, limitSec, stopByMouseSec, )
+            res = qFFplay(runMode, p, fn, vol, order, left, top, width, height, fps, overText, limitSec, stopByMouseSec, )
             count += 1
 
             txts, txt = qFunc.txtsRead(qCtrl_control_self2)
@@ -476,7 +480,7 @@ def panelPlay(panel, runMode, path, vol, order, loop, overtext, limitSec, stopBy
 
                     # play
                     left, top, width, height = qFunc.getPanelPos(p,)
-                    res = qFFplay(p, fn, vol, order, left, top, width, height, fps, overtext, limitSec2, stopByMouseSec, )
+                    res = qFFplay(runMode, p, fn, vol, order, left, top, width, height, fps, overText, limitSec2, stopByMouseSec, )
                     count += 1
 
                     ## BLACK OFF START
@@ -569,6 +573,7 @@ class main_player:
         self.bgv_folder         = '_動画_AppleTV'
         self.bgv_volume         = 0
         self.bgv_stopByMouseSec = 300
+        self.bgv_overText       = '%{localtime}'
         self.dayStart           = '06:25:00'
         self.dayEnd             = '18:05:00'
         self.lunchStart         = '12:00:00'
@@ -598,6 +603,7 @@ class main_player:
             self.bgv_folder         = json_dic['bgv_folder']
             self.bgv_volume         = json_dic['bgv_volume']
             self.bgv_stopByMouseSec = json_dic['bgv_stopByMouseSec']
+            self.bgv_overText       = json_dic['bgv_overText']
             self.dayStart           = json_dic['dayStart']
             self.dayEnd             = json_dic['dayEnd']
             self.lunchStart         = json_dic['lunchStart']
@@ -881,23 +887,23 @@ class main_player:
 
         elif (proc_text.lower() == '_bgv_'):
             #self.sub_stop('_stop_', )
-            self.sub_start(proc_text, self.path_bgv, panel='0' , vol=int(self.bgv_volume), order='normal', loop=99, limitSec=int(self.bgv_changeSec), stopByMouseSec=self.bgv_stopByMouseSec, )
+            self.sub_start(proc_text, self.path_bgv, panel='0' , vol=int(self.bgv_volume), order='normal', loop=99, overText=self.bgv_overText, limitSec=int(self.bgv_changeSec), stopByMouseSec=self.bgv_stopByMouseSec, )
 
         elif ((proc_text.find(u'動画') >=0) and (proc_text.find(u'メニュー') >=0)) or (proc_text.lower() == '_test_'):
             #self.sub_stop('_stop_', )
-            self.sub_start(proc_text, self.path_play['00'], panel='0' , vol=0  , order='normal', loop=99, overtext='', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['01'], panel='1-', vol=0  , order='normal', loop=99, overtext='01', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['02'], panel='2-', vol=0  , order='normal', loop=99, overtext='02', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['03'], panel='3-', vol=0  , order='normal', loop=99, overtext='03', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['04'], panel='4-', vol=0  , order='normal', loop=99, overtext='04', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['00'], panel='0' , vol=0  , order='normal', loop=99, overText='', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['01'], panel='1-', vol=0  , order='normal', loop=99, overText='01', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['02'], panel='2-', vol=0  , order='normal', loop=99, overText='02', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['03'], panel='3-', vol=0  , order='normal', loop=99, overText='03', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['04'], panel='4-', vol=0  , order='normal', loop=99, overText='04', limitSec=0, stopByMouseSec=0, )
             if (proc_text.find(u'動画') >=0) and (proc_text.find(u'メニュー') >=0):
-                self.sub_start(proc_text, self.path_play['05'], panel='5-', vol=0  , order='normal', loop=99, overtext='05', limitSec=0, stopByMouseSec=0, )
+                self.sub_start(proc_text, self.path_play['05'], panel='5-', vol=0  , order='normal', loop=99, overText='05', limitSec=0, stopByMouseSec=0, )
             if (proc_text.lower() == '_test_'):
-                self.sub_start(proc_text, self.path_play['05'], panel='5-', vol=int(self.play_volume), order='top'   , loop=99, overtext='05', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['06'], panel='6-', vol=0  , order='normal', loop=99, overtext='06', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['07'], panel='7-', vol=0  , order='normal', loop=99, overtext='07', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['08'], panel='8-', vol=0  , order='normal', loop=99, overtext='08', limitSec=0, stopByMouseSec=0, )
-            self.sub_start(proc_text, self.path_play['09'], panel='9-', vol=0  , order='normal', loop=99, overtext='09', limitSec=0, stopByMouseSec=0, )
+                self.sub_start(proc_text, self.path_play['05'], panel='5-', vol=int(self.play_volume), order='top'   , loop=99, overText='05', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['06'], panel='6-', vol=0  , order='normal', loop=99, overText='06', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['07'], panel='7-', vol=0  , order='normal', loop=99, overText='07', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['08'], panel='8-', vol=0  , order='normal', loop=99, overText='08', limitSec=0, stopByMouseSec=0, )
+            self.sub_start(proc_text, self.path_play['09'], panel='9-', vol=0  , order='normal', loop=99, overText='09', limitSec=0, stopByMouseSec=0, )
 
         elif (proc_text.lower() >= '01') and (proc_text.lower() <= '09'):
             #self.sub_stop('_stop_', )
@@ -949,7 +955,7 @@ class main_player:
             return True
 
     # 開始
-    def sub_start(self, proc_text, proc_path, panel='0-', vol=100, order='normal', loop=1, overtext='', limitSec=0, stopByMouseSec=0, ):
+    def sub_start(self, proc_text, proc_path, panel='0-', vol=100, order='normal', loop=1, overText='', limitSec=0, stopByMouseSec=0, ):
 
         # ログ
         qLog.log('info', self.proc_id, 'open ' + proc_path, display=True,)
@@ -988,7 +994,7 @@ class main_player:
             self.play_id[i]   = panel
             self.play_path[i] = proc_path
             self.play_proc[i] = threading.Thread(target=panelPlay, args=(
-                self.play_id[i], self.runMode, self.play_path[i], vol, order, loop, overtext, limitSec, stopByMouseSec,
+                self.play_id[i], self.runMode, self.play_path[i], vol, order, loop, overText, limitSec, stopByMouseSec,
                 self.dayStart, self.dayEnd, self.lunchStart, self.lunchEnd,
                 #), daemon=True, )
                 ))
