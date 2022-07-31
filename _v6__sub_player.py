@@ -197,7 +197,7 @@ def qFFplay(runMode='debug', id='qFFplay', file='', vol=100, order='normal', lef
         if (runMode != 'bgv'):
             vf += ",drawtext=fontfile=" + qFONT_default['file'] + ":fontsize=256:fontcolor=white:x=0:y=0:text='" + overText + "'"
         else:
-            vf += ",drawtext=fontfile=" + qFONT_default['file'] + ":fontsize=64:fontcolor=white:x=0:y=h-th:text='" + overText + "'"
+            vf += ",drawtext=fontfile=" + qFONT_default['file'] + ":fontsize=64:fontcolor=white:x=50:y=h-th*2:text='" + overText + "'"
 
     if (file[-4:].lower() == '.wav') \
     or (file[-4:].lower() == '.mp3') \
