@@ -252,7 +252,7 @@ def qFFplay(runMode='debug', id='qFFplay', file='', vol=100, order='normal', lef
         chktime = time.time()
         while (hwnd == 0) and ((time.time() - chktime) < 8):
             hwnd = ctypes.windll.user32.FindWindowW(None, str(id))
-            time.sleep(0.10)
+            time.sleep(0.25)
 
         if (hwnd != 0):
             if (width != 0) or (height != 0):
@@ -279,7 +279,7 @@ def qFFplay(runMode='debug', id='qFFplay', file='', vol=100, order='normal', lef
                         break
                     last_mouse_x = x
                     last_mouse_y = y
-                time.sleep(0.25)
+                time.sleep(0.50)
 
     else:
             time.sleep(1.00)
@@ -473,7 +473,9 @@ def panelPlay(panel, runMode, path, vol, order, loop, overText1, overText2, limi
                 #                    black_time   = None
 
                 # play
-                if (playFlag == True):
+                if (playFlag != True):
+                    time.sleep(1.00)
+                else:
                     ## BLACK ON
                     #if (runMode == 'bgv'):
                     #    img = cv2.imread(qPath_icons + '__black.png')
@@ -512,6 +514,7 @@ def panelPlay(panel, runMode, path, vol, order, loop, overText1, overText2, limi
 
         if (loop < 9):
             loop -= 1
+            time.sleep(0.50)
 
 
 
