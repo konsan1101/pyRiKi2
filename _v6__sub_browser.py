@@ -345,6 +345,9 @@ class main_browser:
         if (self.runUrl != ''):
             self.url_home     = self.runUrl
 
+        # 最終実行スクリプト
+        self.last_script = None
+
         # セキュリティ情報
         userpass_file = '_userpass_key.json'
         if (self.username == ''):
@@ -725,10 +728,17 @@ class main_browser:
 
                     print('python ' + filename + ' ' + self.runMode)
 
-                    py=subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
-                    #py.wait()
-                    #py.terminate()
-                    #py = None
+                    try:
+                        if (self.last_script != None):
+                            self.last_script.terminate()
+                            self.last_script = None
+                    except:
+                        pass
+
+                    self.last_script = subprocess.Popen(['python', filename, self.runMode, qPath_controls + path, username, password, ], )
+                    #self.last_script.wait()
+                    #self.last_script.terminate()
+                    #self.last_script = None
             #except Exception as e:
             #    pass
 
