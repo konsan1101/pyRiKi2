@@ -730,6 +730,7 @@ class main_browser:
 
                     try:
                         if (self.last_script != None):
+                            time.sleep(1.00)
                             self.last_script.terminate()
                             self.last_script = None
                     except:

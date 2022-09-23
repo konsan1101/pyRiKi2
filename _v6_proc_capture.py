@@ -195,6 +195,17 @@ class proc_capture:
         cv2.rectangle(self.blue_img,(0,0),(320,240),(255,0,0),-1)
         cv2.putText(self.blue_img, 'No Image !', (40,80), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,255))
 
+        # 最終実行スクリプト
+        self.last_script = None
+
+        # セキュリティ情報
+        userpass_file = '_userpass_key.json'
+        if (self.username == ''):
+            res, json_dic = qRiKi_key.getCryptJson(config_file=userpass_file, auto_crypt=True, )
+            if (res == True):
+                self.username = json_dic['username']
+                self.password = json_dic['password']
+
     def __del__(self, ):
         qLog.log('info', self.proc_id, 'bye!', display=self.logDisp, )
 
@@ -406,8 +417,11 @@ class proc_capture:
                     self.winName = win32gui.GetWindowText(hWnd)
                     #print(self.winName)
                 except:
-                    self.winName = None
-                    pass
+                    self.winName = 'none'
+                    #print(self.winName)
+                
+                if (self.winName.find('MicrosoftTeams') >= 0):
+                    self.winName = 'MicrosoftTeams'
 
                 if (self.winName != self.last_winName):
                     if (self.last_pathName != None):
@@ -459,6 +473,14 @@ class proc_capture:
                                                 password = dic['password']
 
                                 print('python ' + filename + ' ' + self.runMode)
+
+                                try:
+                                    if (self.last_script != None):
+                                        time.sleep(1.00)
+                                        self.last_script.terminate()
+                                        self.last_script = None
+                                except:
+                                    pass
 
                                 py=subprocess.Popen(['python', filename, self.runMode, path2, username, password, ], )
                                 #py.wait()
