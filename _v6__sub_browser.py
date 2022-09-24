@@ -681,6 +681,9 @@ class main_browser:
             if (self.browser_url == self.last_url):
                 return False
 
+            # 情報表示
+            qLog.log('info', self.proc_id, self.browser_url)
+
             #visibility_of_all_elements_located
             #ページの全要素がDOM上に現れ, かつheight・widthが0以上になるまで待機
             self.browser_wait = WebDriverWait(self.browser_id, 10)
@@ -726,7 +729,8 @@ class main_browser:
                                 username = dic['username']
                                 password = dic['password']
 
-                    print('python ' + filename + ' ' + self.runMode)
+                    #print('python ' + filename + ' ' + self.runMode)
+                    qLog.log('info', self.proc_id, filename + ' ' + self.runMode)
 
                     try:
                         if (self.last_script != None):

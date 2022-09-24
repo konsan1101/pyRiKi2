@@ -430,11 +430,17 @@ class proc_capture:
 
                     if (self.winName != None):
 
+                        # 情報表示
+                        qLog.log('info', self.proc_id, self.winName)
+
                         # パス
                         path = qFunc.url2filepath(self.winName)
-                        if (path[-1:] != '/'):
-                            path += '/'
-                        path_first = path[:path.find('/')+1]
+                        if (path.find('/') >= 0):
+                            if (path[-1:] != '/'):
+                                path += '/'
+                            path_first = path[:path.find('/')+1]
+                        else:
+                            path_first = path
                         path2 = qPath_controls + '_desktop/' + path
                         #print(path)
                         #print(path_first)
@@ -472,7 +478,8 @@ class proc_capture:
                                                 username = dic['username']
                                                 password = dic['password']
 
-                                print('python ' + filename + ' ' + self.runMode)
+                                #print('python ' + filename + ' ' + self.runMode)
+                                qLog.log('info', self.proc_id, filename + ' ' + self.runMode)
 
                                 try:
                                     if (self.last_script != None):
@@ -482,10 +489,10 @@ class proc_capture:
                                 except:
                                     pass
 
-                                py=subprocess.Popen(['python', filename, self.runMode, path2, username, password, ], )
-                                #py.wait()
-                                #py.terminate()
-                                #py = None
+                                self.last_script = subprocess.Popen(['python', filename, self.runMode, path2, username, password, ], )
+                                #self.last_script.wait()
+                                #self.last_script.terminate()
+                                #self.last_script = None
                         #except Exception as e:
                         #    pass
 
@@ -622,9 +629,10 @@ if __name__ == '__main__':
                 elif (res_name == '[img]'):
                     if (runMode == 'debug'):
                         cv2.imshow('Display', res_value.copy() )
-                        #pass
+                        pass
                 else:
-                    print(res_name, res_value, )
+                    #print(res_name, res_value, )
+                    pass
 
             # デバッグ
             if (runMode == 'debug'):
